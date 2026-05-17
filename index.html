@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AdEarn — Watch Ads, Earn USDT</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;
+  --bg2:#111827;
+  --bg3:#1a2235;
+  --card:#151e2d;
+  --card2:#1c2538;
+  --border:#ffffff0f;
+  --border2:#ffffff1a;
+  --text:#f0f4ff;
+  --text2:#8a94b0;
+  --text3:#5a627a;
+  --gold:#f5c842;
+  --gold2:#e6a800;
+  --green:#00d084;
+  --green2:#00a566;
+  --blue:#4f8ef7;
+  --blue2:#2563eb;
+  --red:#ff4d6a;
+  --purple:#a855f7;
+  --cyan:#06b6d4;
+  --accent:#f5c842;
+}
+html,body,#root{height:100%;width:100%}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;line-height:1.2}
+button{cursor:pointer;font-family:'DM Sans',sans-serif}
+input,select,textarea{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* Auth */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.auth-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,#f5c84215 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.auth-card{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:40px;width:100%;max-width:420px;position:relative;z-index:1}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;justify-content:center}
+.auth-logo-icon{width:42px;height:42px;background:var(--gold);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-family:'Syne',sans-serif;font-weight:800;color:#000}
+.auth-logo-text{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text)}
+.auth-logo-text span{color:var(--gold)}
+.auth-title{font-size:24px;font-weight:700;margin-bottom:6px;text-align:center}
+.auth-sub{color:var(--text2);font-size:14px;text-align:center;margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;color:var(--text2);margin-bottom:6px;display:block;font-weight:500}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--text3)}
+.btn-primary{width:100%;background:var(--gold);color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;font-family:'Syne',sans-serif;transition:all .2s;letter-spacing:.3px}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.auth-switch{text-align:center;margin-top:20px;font-size:14px;color:var(--text2)}
+.auth-switch button{background:none;border:none;color:var(--gold);font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.auth-error{background:#ff4d6a15;border:1px solid #ff4d6a30;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px}
+
+/* Layout */
+.app-layout{display:flex;height:100vh;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:240px;min-width:240px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;transition:width .3s}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 24px;border-bottom:1px solid var(--border)}
+.sidebar-logo-icon{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-family:'Syne',sans-serif;font-weight:800;color:#000;flex-shrink:0}
+.sidebar-logo-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+.sidebar-logo-text span{color:var(--gold)}
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.nav-section{margin-bottom:24px}
+.nav-section-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;position:relative}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,#f5c84220,#f5c84210);color:var(--gold);border:1px solid #f5c84225}
+.nav-item-icon{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#000;flex-shrink:0}
+.sidebar-user-info{flex:1;min-width:0}
+.sidebar-username{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-userlevel{font-size:11px;color:var(--gold);font-weight:500}
+.sidebar-logout{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:color .15s}
+.sidebar-logout:hover{color:var(--red)}
+
+/* Main content */
+.main-content{flex:1;overflow-y:auto;background:var(--bg)}
+.page-header{padding:28px 32px 0;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.page-title{font-size:26px;font-weight:800}
+.page-title span{color:var(--gold)}
+.page-sub{color:var(--text2);font-size:14px;margin-top:2px}
+.page-body{padding:0 32px 32px}
+
+/* Top bar */
+.topbar{padding:16px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--card)}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.topbar-balance{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.topbar-balance-icon{color:var(--green);font-size:16px}
+.topbar-notif{width:36px;height:36px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all .15s}
+.topbar-notif:hover{border-color:var(--border2)}
+.notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--card)}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.stat-icon.gold{background:#f5c84215;color:var(--gold)}
+.stat-icon.green{background:#00d08415;color:var(--green)}
+.stat-icon.blue{background:#4f8ef715;color:var(--blue)}
+.stat-icon.purple{background:#a855f715;color:var(--purple)}
+.stat-icon.red{background:#ff4d6a15;color:var(--red)}
+.stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1}
+.stat-change{font-size:12px;margin-top:6px;display:flex;align-items:center;gap:4px}
+.stat-change.up{color:var(--green)}
+.stat-change.down{color:var(--red)}
+
+/* Ad Cards */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.section-action{background:none;border:1px solid var(--border2);border-radius:8px;padding:7px 14px;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.section-action:hover{border-color:var(--gold);color:var(--gold)}
+.ads-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.ad-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .2s;cursor:pointer}
+.ad-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.ad-card.locked{opacity:.55;cursor:not-allowed}
+.ad-thumb{height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.ad-thumb-cat{position:absolute;top:10px;left:10px;background:#0008;border-radius:6px;padding:3px 8px;font-size:11px;color:var(--text2);font-weight:500}
+.ad-thumb-reward{position:absolute;top:10px;right:10px;background:var(--gold);color:#000;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:700}
+.ad-body{padding:14px}
+.ad-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.ad-desc{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.ad-meta{display:flex;align-items:center;justify-content:space-between}
+.ad-duration{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.ad-watch-btn{background:var(--gold);color:#000;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.ad-watch-btn:hover{background:var(--gold2)}
+.ad-watch-btn.watched{background:var(--bg3);color:var(--green);border:1px solid var(--green);cursor:default}
+.ad-watch-btn.watching{background:var(--blue);color:#fff}
+
+/* Progress bar */
+.progress-bar-wrap{background:var(--bg3);border-radius:100px;height:6px;overflow:hidden;margin-top:8px}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:100px;transition:width .3s}
+
+/* Timer */
+.ad-timer{font-size:20px;font-weight:700;color:var(--gold);font-family:'Syne',sans-serif;text-align:center;margin:8px 0}
+
+/* Leaderboard */
+.leaderboard-table{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px}
+.lb-header{display:grid;grid-template-columns:50px 1fr 120px 120px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.lb-row{display:grid;grid-template-columns:50px 1fr 120px 120px;padding:14px 20px;border-bottom:1px solid var(--border);align-items:center;transition:background .15s}
+.lb-row:last-child{border-bottom:none}
+.lb-row:hover{background:var(--bg3)}
+.lb-row.me{background:linear-gradient(90deg,#f5c84208,transparent)}
+.lb-rank{font-family:'Syne',sans-serif;font-weight:800;font-size:15px}
+.lb-rank.gold{color:var(--gold)}
+.lb-rank.silver{color:#aaa}
+.lb-rank.bronze{color:#cd7f32}
+.lb-user{display:flex;align-items:center;gap:10px}
+.lb-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.lb-name{font-size:14px;font-weight:500}
+.lb-badge{font-size:10px;background:var(--gold);color:#000;border-radius:4px;padding:1px 6px;margin-left:6px;font-weight:600}
+.lb-score{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+.lb-usdt{font-size:13px;color:var(--green);font-weight:600}
+
+/* Withdraw */
+.withdraw-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.withdraw-card h3{font-family:'Syne',sans-serif;font-size:18px;margin-bottom:20px}
+.withdraw-balance-big{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;color:var(--gold);margin-bottom:4px}
+.withdraw-balance-sub{font-size:14px;color:var(--text2);margin-bottom:24px}
+.withdraw-form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.w-input-group{display:flex;flex-direction:column;gap:6px}
+.w-label{font-size:13px;color:var(--text2);font-weight:500}
+.w-input{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s;width:100%}
+.w-input:focus{border-color:var(--gold)}
+.w-submit{background:var(--green);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:600;width:100%;cursor:pointer;font-family:'Syne',sans-serif;transition:background .2s;margin-top:4px}
+.w-submit:hover{background:var(--green2)}
+.w-submit:disabled{opacity:.5;cursor:not-allowed}
+.history-table{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.history-header{display:grid;grid-template-columns:1fr 80px 90px 100px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.history-row{display:grid;grid-template-columns:1fr 80px 90px 100px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center;font-size:13px}
+.history-row:last-child{border-bottom:none}
+.status-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block}
+.status-badge.pending{background:#f5c84215;color:var(--gold)}
+.status-badge.paid{background:#00d08415;color:var(--green)}
+.status-badge.failed{background:#ff4d6a15;color:var(--red)}
+
+/* Modal overlay */
+.modal-overlay{position:fixed;inset:0;background:#0009;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-box{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--bg3);border:none;color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:color .15s}
+.modal-close:hover{color:var(--red)}
+.modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px}
+.modal-sub{font-size:14px;color:var(--text2);margin-bottom:20px}
+.modal-reward{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--gold);text-align:center;margin:12px 0}
+.modal-reward-label{font-size:13px;color:var(--text2);text-align:center;margin-bottom:16px}
+.modal-btn{width:100%;background:var(--gold);color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:background .2s}
+.modal-btn:hover{background:var(--gold2)}
+.ad-play-area{background:var(--bg3);border-radius:12px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;font-size:48px;position:relative;overflow:hidden}
+.ad-play-label{font-size:13px;color:var(--text2);margin-top:8px}
+.ad-countdown{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--gold);position:absolute;right:16px;bottom:12px}
+
+/* Profile */
+.profile-grid{display:grid;grid-template-columns:320px 1fr;gap:20px}
+.profile-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+.profile-avatar-big{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#000;margin:0 auto 16px;font-family:'Syne',sans-serif}
+.profile-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center}
+.profile-email{font-size:13px;color:var(--text2);text-align:center;margin-bottom:20px}
+.profile-level{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px}
+.level-badge{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;font-family:'Syne',sans-serif}
+.profile-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid var(--border);padding-top:20px}
+.profile-stat{text-align:center}
+.profile-stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+.profile-stat-label{font-size:12px;color:var(--text2);margin-top:2px}
+.settings-section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px}
+.settings-section h3{font-family:'Syne',sans-serif;font-size:16px;margin-bottom:16px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-row-label{font-size:14px;font-weight:500}
+.settings-row-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.toggle{width:44px;height:24px;background:var(--bg3);border-radius:12px;position:relative;cursor:pointer;border:1px solid var(--border2);transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s}
+.toggle.on::after{left:22px}
+
+/* Chip tags */
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2)}
+.chip.green{background:#00d08415;border-color:#00d08430;color:var(--green)}
+.chip.gold{background:#f5c84215;border-color:#f5c84230;color:var(--gold)}
+
+/* Toast */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;font-size:14px;display:flex;align-items:center;gap:10px;z-index:999;box-shadow:0 8px 32px #0006;animation:toastIn .3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast-icon{font-size:20px}
+
+/* Responsive notice */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .ads-grid{grid-template-columns:repeat(2,1fr)}
+  .profile-grid{grid-template-columns:1fr}
+  .withdraw-form{grid-template-columns:1fr}
+}
+
+/* Animations */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 1.5s infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+
+/* Referral */
+.ref-box{background:var(--bg3);border:1px dashed var(--border2);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ref-code{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:2px;color:var(--gold)}
+.ref-copy{background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:7px 14px;color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s}
+.ref-copy:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Empty state */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:14px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+// ─── MOCK DATA ──────────────────────────────────────────────────────────────
+const MOCK_ADS=[
+  {id:1,title:"Crypto Exchange Promo",desc:"Learn about the fastest growing crypto exchange platform",cat:"Finance",emoji:"💹",reward:50,duration:30,color:"#1a2a1a",watched:false},
+  {id:2,title:"Gaming App Launch",desc:"Brand new mobile RPG game – pre-register now and get rewards",cat:"Gaming",emoji:"🎮",reward:35,duration:20,color:"#1a1a2a",watched:false},
+  {id:3,title:"Online Store Sale",desc:"Massive discounts on electronics – limited time offer",cat:"Shopping",emoji:"🛍️",reward:25,duration:15,color:"#2a1a1a",watched:false},
+  {id:4,title:"VPN Service Ad",desc:"Protect your privacy with the world's fastest VPN service",cat:"Tech",emoji:"🔐",reward:40,duration:25,color:"#1a2a2a",watched:false},
+  {id:5,title:"Learn English App",desc:"Fluent in 90 days – scientifically proven language learning",cat:"Education",emoji:"📚",reward:30,duration:20,color:"#2a2a1a",watched:false},
+  {id:6,title:"Fitness Tracker",desc:"Track your workouts and reach your fitness goals faster",cat:"Health",emoji:"💪",reward:20,duration:10,color:"#1a1a1a",watched:false},
+];
+
+const LEADERBOARD=[
+  {rank:1,name:"Ahmad K.",score:12450,usdt:12.45,avatar:"AK",color:"#f5c842"},
+  {rank:2,name:"Sara M.",score:10200,usdt:10.20,avatar:"SM",color:"#a855f7"},
+  {rank:3,name:"Bilal R.",score:9800,usdt:9.80,avatar:"BR",color:"#06b6d4"},
+  {rank:4,name:"You",score:8750,usdt:8.75,avatar:"",color:"#f5c842",isMe:true},
+  {rank:5,name:"Fatima Z.",score:7300,usdt:7.30,avatar:"FZ",color:"#00d084"},
+  {rank:6,name:"Usman T.",score:6100,usdt:6.10,avatar:"UT",color:"#4f8ef7"},
+  {rank:7,name:"Nadia A.",score:5400,usdt:5.40,avatar:"NA",color:"#ff4d6a"},
+];
+
+const HISTORY=[
+  {date:"May 12, 2025",amount:"2.50",score:2500,status:"paid"},
+  {date:"May 5, 2025",amount:"1.75",score:1750,status:"paid"},
+  {date:"Apr 28, 2025",amount:"3.00",score:3000,status:"pending"},
+  {date:"Apr 20, 2025",amount:"1.00",score:1000,status:"paid"},
+  {date:"Apr 10, 2025",amount:"0.50",score:500,status:"failed"},
+];
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function Toast({msg,icon,onDone}){
+  useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t)},[]);
+  return <div className="toast"><span className="toast-icon">{icon}</span>{msg}</div>;
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+function AuthPage({onLogin}){
+  const [mode,setMode]=useState('login');
+  const [form,setForm]=useState({name:'',email:'',password:''});
+  const [err,setErr]=useState('');
+  const set=k=>e=>setForm(f=>({...f,[k]:e.target.value}));
+  function submit(e){
+    e.preventDefault();setErr('');
+    if(!form.email||!form.password){setErr('Please fill all fields');return;}
+    if(mode==='register'&&!form.name){setErr('Please enter your name');return;}
+    if(form.password.length<6){setErr('Password must be at least 6 characters');return;}
+    onLogin({name:form.name||form.email.split('@')[0],email:form.email});
+  }
+  return(
+    <div className="auth-wrap">
+      <div className="auth-glow"/>
+      <div className="auth-card">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">A</div>
+          <div className="auth-logo-text">Ad<span>Earn</span></div>
+        </div>
+        <h2 className="auth-title">{mode==='login'?'Welcome Back':'Create Account'}</h2>
+        <p className="auth-sub">{mode==='login'?'Sign in to start earning USDT':'Join thousands earning from ads'}</p>
+        <form onSubmit={submit}>
+          {err&&<div className="auth-error">⚠️ {err}</div>}
+          {mode==='register'&&<div className="form-group">
+            <label className="form-label">Full Name</label>
+            <input className="form-input" placeholder="Hamza Khan" value={form.name} onChange={set('name')}/>
+          </div>}
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input className="form-input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')}/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input className="form-input" type="password" placeholder="••••••••" value={form.password} onChange={set('password')}/>
+          </div>
+          <button className="btn-primary" type="submit">{mode==='login'?'Sign In →':'Create Account →'}</button>
+        </form>
+        <div className="auth-switch">
+          {mode==='login'?<>Don't have an account? <button onClick={()=>setMode('register')}>Register</button></>
+          :<>Already have an account? <button onClick={()=>setMode('login')}>Sign In</button></>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── AD WATCH MODAL ───────────────────────────────────────────────────────────
+function AdModal({ad,onClose,onComplete}){
+  const [phase,setPhase]=useState('preview'); // preview | watching | done
+  const [timer,setTimer]=useState(ad.duration);
+  const [progress,setProgress]=useState(0);
+  useEffect(()=>{
+    if(phase!=='watching')return;
+    const interval=setInterval(()=>{
+      setTimer(t=>{
+        if(t<=1){clearInterval(interval);setPhase('done');return 0;}
+        return t-1;
+      });
+      setProgress(p=>Math.min(100,p+(100/ad.duration)));
+    },1000);
+    return()=>clearInterval(interval);
+  },[phase]);
+  return(
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&phase!=='watching'&&onClose()}>
+      <div className="modal-box">
+        <button className="modal-close" onClick={()=>phase!=='watching'&&onClose()}>✕</button>
+        {phase==='preview'&&<>
+          <div className="modal-title">{ad.title}</div>
+          <div className="modal-sub">{ad.cat} · {ad.duration}s to watch · Earn {ad.reward} pts</div>
+          <div className="ad-play-area" style={{background:ad.color}}>
+            <span style={{fontSize:56}}>{ad.emoji}</span>
+            <span className="ad-play-label">{ad.desc}</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+            <span style={{fontSize:13,color:'var(--text2)'}}>⏱ Duration: {ad.duration} seconds</span>
+            <span className="chip gold">+{ad.reward} pts</span>
+          </div>
+          <button className="modal-btn" onClick={()=>setPhase('watching')}>▶ Watch Ad</button>
+        </>}
+        {phase==='watching'&&<>
+          <div className="modal-title">Watching Ad…</div>
+          <div className="modal-sub">Don't close this window</div>
+          <div className="ad-play-area" style={{background:ad.color}}>
+            <span style={{fontSize:56}} className="pulse">{ad.emoji}</span>
+            <div className="ad-countdown">{timer}</div>
+          </div>
+          <div className="progress-bar-wrap">
+            <div className="progress-bar-fill" style={{width:progress+'%'}}/>
+          </div>
+          <p style={{textAlign:'center',marginTop:12,fontSize:13,color:'var(--text2)'}}>Ad in progress — {timer}s remaining</p>
+        </>}
+        {phase==='done'&&<>
+          <div style={{textAlign:'center',paddingTop:8}}>
+            <div style={{fontSize:52,marginBottom:8}}>🎉</div>
+            <div className="modal-title">Ad Watched!</div>
+            <div className="modal-sub">You've earned your reward</div>
+            <div className="modal-reward">+{ad.reward}</div>
+            <div className="modal-reward-label">Points added to your balance</div>
+            <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 16px',marginBottom:20,fontSize:13,color:'var(--text2)'}}>
+              ≈ ${(ad.reward/1000).toFixed(4)} USDT equivalent
+            </div>
+            <button className="modal-btn" onClick={()=>onComplete(ad)}>Claim & Continue</button>
+          </div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+function Dashboard({user,ads,setAds,onWatchAd}){
+  const totalEarned=ads.filter(a=>a.watched).reduce((s,a)=>s+a.reward,0)+8750;
+  const todayAds=ads.filter(a=>a.watched).length;
+  return(
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Hello, <span>{user.name.split(' ')[0]}</span> 👋</h1>
+          <p className="page-sub">Watch ads and earn USDT — updated live</p>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <span className="chip green">🟢 Active</span>
+          <span className="chip gold">⭐ Level 4</span>
+        </div>
+      </div>
+      <div className="page-body">
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-label">Total Score<div className="stat-icon gold">⭐</div></div>
+            <div className="stat-value">{(totalEarned).toLocaleString()}</div>
+            <div className="stat-change up">↑ +{ads.filter(a=>a.watched).reduce((s,a)=>s+a.reward,0)} today</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">USDT Balance<div className="stat-icon green">💵</div></div>
+            <div className="stat-value" style={{color:'var(--green)'}}>$8.75</div>
+            <div className="stat-change up">↑ +${(ads.filter(a=>a.watched).reduce((s,a)=>s+a.reward,0)/1000).toFixed(3)}</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Ads Watched<div className="stat-icon blue">📺</div></div>
+            <div className="stat-value">{87+todayAds}</div>
+            <div className="stat-change up">↑ {todayAds} today</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Rank<div className="stat-icon purple">🏆</div></div>
+            <div className="stat-value">#4</div>
+            <div className="stat-change" style={{color:'var(--text2)'}}>Top 10 worldwide</div>
+          </div>
+        </div>
+
+        {/* Daily progress */}
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:20,marginBottom:24}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+            <div>
+              <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>Daily Goal</div>
+              <div style={{fontSize:13,color:'var(--text2)',marginTop:2}}>Watch {6-Math.min(todayAds,6)} more ads to reach your daily target</div>
+            </div>
+            <div style={{fontFamily:'Syne',fontSize:20,fontWeight:800,color:'var(--gold)'}}>{todayAds}/6</div>
+          </div>
+          <div className="progress-bar-wrap" style={{height:10}}>
+            <div className="progress-bar-fill" style={{width:Math.min(100,(todayAds/6)*100)+'%'}}/>
+          </div>
+          {todayAds>=6&&<div style={{marginTop:10,fontSize:13,color:'var(--green)',fontWeight:600}}>🎉 Daily goal reached! Bonus 100 pts earned!</div>}
+        </div>
+
+        <div className="section-header">
+          <div className="section-title">Available Ads</div>
+          <div style={{fontSize:13,color:'var(--text2)'}}>1 pt = $0.001 USDT</div>
+        </div>
+        <div className="ads-grid">
+          {ads.map(ad=>(
+            <div className={`ad-card ${ad.watched?'locked':''}`} key={ad.id}>
+              <div className="ad-thumb" style={{background:ad.color,fontSize:44}}>
+                {ad.emoji}
+                <span className="ad-thumb-cat">{ad.cat}</span>
+                <span className="ad-thumb-reward">+{ad.reward} pts</span>
+              </div>
+              <div className="ad-body">
+                <div className="ad-title">{ad.title}</div>
+                <div className="ad-desc">{ad.desc}</div>
+                <div className="ad-meta">
+                  <div className="ad-duration">⏱ {ad.duration}s</div>
+                  {ad.watched
+                    ?<button className="ad-watch-btn watched">✓ Watched</button>
+                    :<button className="ad-watch-btn" onClick={()=>onWatchAd(ad)}>Watch Ad</button>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Referral */}
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:20}}>
+          <div className="section-header" style={{marginBottom:12}}>
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>Refer Friends → Earn More</div>
+            <span className="chip gold">+200 pts per referral</span>
+          </div>
+          <div className="ref-box">
+            <div>
+              <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>Your Referral Code</div>
+              <div className="ref-code">ADEARN-{user.name.toUpperCase().replace(/\s/g,'').slice(0,4)}</div>
+            </div>
+            <button className="ref-copy" onClick={()=>alert('Code copied!')}>📋 Copy</button>
+          </div>
+          <div style={{fontSize:13,color:'var(--text2)'}}>Share your code. When they sign up and watch their first ad, you both earn bonus points!</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── EARN PAGE ────────────────────────────────────────────────────────────────
+function EarnPage({ads,onWatchAd}){
+  const [filter,setFilter]=useState('all');
+  const cats=['all','Finance','Gaming','Shopping','Tech','Education','Health'];
+  const filtered=filter==='all'?ads:ads.filter(a=>a.cat===filter);
+  return(
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Watch & <span>Earn</span></h1>
+          <p className="page-sub">Click any ad, watch it fully, earn your points instantly</p>
+        </div>
+      </div>
+      <div className="page-body">
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:20}}>
+          {cats.map(c=>(
+            <button key={c} onClick={()=>setFilter(c)} style={{background:filter===c?'var(--gold)':'var(--card)',color:filter===c?'#000':'var(--text2)',border:`1px solid ${filter===c?'var(--gold)':'var(--border)'}`,borderRadius:8,padding:'7px 16px',fontSize:13,fontWeight:600,cursor:'pointer',transition:'all .15s'}}>
+              {c==='all'?'All Ads':c}
+            </button>
+          ))}
+        </div>
+        <div className="ads-grid">
+          {filtered.map(ad=>(
+            <div className={`ad-card ${ad.watched?'locked':''}`} key={ad.id}>
+              <div className="ad-thumb" style={{background:ad.color,fontSize:44}}>
+                {ad.emoji}
+                <span className="ad-thumb-cat">{ad.cat}</span>
+                <span className="ad-thumb-reward">+{ad.reward} pts</span>
+              </div>
+              <div className="ad-body">
+                <div className="ad-title">{ad.title}</div>
+                <div className="ad-desc">{ad.desc}</div>
+                <div className="ad-meta">
+                  <div className="ad-duration">⏱ {ad.duration}s</div>
+                  {ad.watched
+                    ?<button className="ad-watch-btn watched">✓ Done</button>
+                    :<button className="ad-watch-btn" onClick={()=>onWatchAd(ad)}>Watch</button>}
+                </div>
+              </div>
+            </div>
+          ))}
+          {filtered.length===0&&<div className="empty-state" style={{gridColumn:'1/-1'}}>
+            <div className="empty-icon">📭</div>
+            <div className="empty-text">No ads in this category right now</div>
+          </div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── LEADERBOARD PAGE ─────────────────────────────────────────────────────────
+function LeaderboardPage(){
+  return(
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">🏆 <span>Leaderboard</span></h1>
+          <p className="page-sub">Top earners this month — updated every hour</p>
+        </div>
+        <span className="chip gold">Resets in 14 days</span>
+      </div>
+      <div className="page-body">
+        {/* Top 3 podium */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1.2fr 1fr',gap:12,marginBottom:24}}>
+          {[LEADERBOARD[1],LEADERBOARD[0],LEADERBOARD[2]].map((u,i)=>{
+            const pos=[2,1,3][i];
+            const heights=['160px','200px','140px'][i];
+            const colors=['#aaa','var(--gold)','#cd7f32'];
+            return(
+              <div key={u.rank} style={{background:'var(--card)',border:`1px solid ${i===1?'var(--gold)':'var(--border)'}`,borderRadius:16,padding:20,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-end',minHeight:heights,position:'relative'}}>
+                <div style={{position:'absolute',top:12,right:12,fontFamily:'Syne',fontSize:13,fontWeight:800,color:colors[i]}}>#{pos}</div>
+                <div style={{width:48,height:48,borderRadius:'50%',background:`${colors[i]}30`,border:`2px solid ${colors[i]}`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:16,color:colors[i],marginBottom:8,fontFamily:'Syne'}}>{u.avatar||'👤'}</div>
+                <div style={{fontWeight:600,fontSize:14}}>{u.name}</div>
+                <div style={{fontFamily:'Syne',fontWeight:800,fontSize:18,color:colors[i],marginTop:4}}>{u.score.toLocaleString()}</div>
+                <div style={{fontSize:12,color:'var(--green)',marginTop:2}}>${u.usdt} USDT</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="leaderboard-table">
+          <div className="lb-header">
+            <div>Rank</div><div>User</div><div>Score</div><div>USDT Earned</div>
+          </div>
+          {LEADERBOARD.map(u=>(
+            <div className={`lb-row ${u.isMe?'me':''}`} key={u.rank}>
+              <div className={`lb-rank ${u.rank===1?'gold':u.rank===2?'silver':u.rank===3?'bronze':''}`}>#{u.rank}</div>
+              <div className="lb-user">
+                <div className="lb-avatar" style={{background:u.color+'30',color:u.color}}>{u.avatar||'👤'}</div>
+                <div className="lb-name">{u.name}{u.isMe&&<span className="lb-badge">YOU</span>}</div>
+              </div>
+              <div className="lb-score">{u.score.toLocaleString()} pts</div>
+              <div className="lb-usdt">${u.usdt.toFixed(2)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── WITHDRAW PAGE ────────────────────────────────────────────────────────────
+function WithdrawPage({score,toast}){
+  const [wallet,setWallet]=useState('');
+  const [amount,setAmount]=useState('');
+  const [history,setHistory]=useState(HISTORY);
+  const usdtBal=(score/1000).toFixed(3);
+  function submit(){
+    if(!wallet||!amount){toast('Please fill all fields','⚠️');return;}
+    if(parseFloat(amount)<1){toast('Minimum withdrawal is $1.00','⚠️');return;}
+    if(parseFloat(amount)>parseFloat(usdtBal)){toast('Insufficient balance','❌');return;}
+    setHistory(h=>[{date:'Today',amount:parseFloat(amount).toFixed(2),score:parseFloat(amount)*1000,status:'pending'},...h]);
+    toast(`Withdrawal of $${amount} USDT submitted!`,'✅');
+    setWallet('');setAmount('');
+  }
+  return(
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Withdraw <span>USDT</span></h1>
+          <p className="page-sub">Convert your points to real USDT — minimum $1.00</p>
+        </div>
+      </div>
+      <div className="page-body">
+        <div className="withdraw-card">
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:20}}>
+            <div>
+              <div style={{fontSize:13,color:'var(--text2)',marginBottom:6}}>Available Balance</div>
+              <div className="withdraw-balance-big">${usdtBal}</div>
+              <div className="withdraw-balance-sub">{score.toLocaleString()} points · 1 pt = $0.001 USDT</div>
+            </div>
+            <span className="chip green">TRC-20 Network</span>
+          </div>
+          <div className="withdraw-form">
+            <div className="w-input-group">
+              <label className="w-label">USDT Wallet Address (TRC-20)</label>
+              <input className="w-input" placeholder="TYour...WalletAddress" value={wallet} onChange={e=>setWallet(e.target.value)}/>
+            </div>
+            <div className="w-input-group">
+              <label className="w-label">Amount (USDT)</label>
+              <input className="w-input" type="number" placeholder="1.00" min="1" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/>
+            </div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginTop:16}}>
+            <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 14px',fontSize:13,color:'var(--text2)'}}>
+              <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Min Withdrawal</div>
+              $1.00 USDT
+            </div>
+            <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 14px',fontSize:13,color:'var(--text2)'}}>
+              <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Processing Time</div>
+              1-24 hours (manual)
+            </div>
+          </div>
+          <button className="w-submit" style={{marginTop:20}} onClick={submit}>Request Withdrawal →</button>
+          <div style={{marginTop:12,fontSize:12,color:'var(--text3)',textAlign:'center'}}>
+            ⚠️ Make sure your wallet address is correct. Wrong address = lost funds.
+          </div>
+        </div>
+        <div className="section-header">
+          <div className="section-title">Withdrawal History</div>
+        </div>
+        <div className="history-table">
+          <div className="history-header"><div>Date</div><div>Score</div><div>Amount</div><div>Status</div></div>
+          {history.map((h,i)=>(
+            <div className="history-row" key={i}>
+              <div style={{fontSize:13,color:'var(--text2)'}}>{h.date}</div>
+              <div style={{fontSize:13}}>{h.score.toLocaleString()} pts</div>
+              <div style={{fontFamily:'Syne',fontWeight:700,color:'var(--green)'}}>${h.amount}</div>
+              <div><span className={`status-badge ${h.status}`}>{h.status.charAt(0).toUpperCase()+h.status.slice(1)}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROFILE ──────────────────────────────────────────────────────────────────
+function ProfilePage({user,score,ads}){
+  const [notifs,setNotifs]=useState(true);
+  const [twofa,setTwofa]=useState(false);
+  const initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  return(
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">My <span>Profile</span></h1>
+          <p className="page-sub">Manage your account and settings</p>
+        </div>
+      </div>
+      <div className="page-body">
+        <div className="profile-grid">
+          <div>
+            <div className="profile-card" style={{marginBottom:16}}>
+              <div className="profile-avatar-big">{initials}</div>
+              <div className="profile-name">{user.name}</div>
+              <div className="profile-email">{user.email}</div>
+              <div className="profile-level"><span className="level-badge">⭐ Level 4 Earner</span></div>
+              <div className="profile-stats">
+                <div className="profile-stat"><div className="profile-stat-val" style={{color:'var(--gold)'}}>{score.toLocaleString()}</div><div className="profile-stat-label">Total Score</div></div>
+                <div className="profile-stat"><div className="profile-stat-val" style={{color:'var(--green)'}}>$8.75</div><div className="profile-stat-label">Earned USDT</div></div>
+                <div className="profile-stat"><div className="profile-stat-val">{87+ads.filter(a=>a.watched).length}</div><div className="profile-stat-label">Ads Watched</div></div>
+                <div className="profile-stat"><div className="profile-stat-val">12</div><div className="profile-stat-label">Referrals</div></div>
+              </div>
+            </div>
+            <div className="profile-card">
+              <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,marginBottom:14}}>Level Progress</div>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text2)',marginBottom:6}}>
+                <span>Level 4</span><span>Level 5 (10,000 pts needed)</span>
+              </div>
+              <div className="progress-bar-wrap" style={{height:8,marginBottom:12}}>
+                <div className="progress-bar-fill" style={{width:'87%'}}/>
+              </div>
+              <div style={{fontSize:12,color:'var(--text2)'}}>1,250 more points to reach Level 5 and unlock bonus rewards!</div>
+            </div>
+          </div>
+          <div>
+            <div className="settings-section">
+              <h3>Account Settings</h3>
+              <div className="settings-row">
+                <div><div className="settings-row-label">Display Name</div><div className="settings-row-sub">{user.name}</div></div>
+                <button style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,padding:'7px 14px',color:'var(--text2)',fontSize:13,cursor:'pointer'}}>Edit</button>
+              </div>
+              <div className="settings-row">
+                <div><div className="settings-row-label">Email</div><div className="settings-row-sub">{user.email}</div></div>
+                <button style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,padding:'7px 14px',color:'var(--text2)',fontSize:13,cursor:'pointer'}}>Change</button>
+              </div>
+              <div className="settings-row">
+                <div><div className="settings-row-label">Password</div><div className="settings-row-sub">Last changed 30 days ago</div></div>
+                <button style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,padding:'7px 14px',color:'var(--text2)',fontSize:13,cursor:'pointer'}}>Update</button>
+              </div>
+            </div>
+            <div className="settings-section">
+              <h3>Preferences</h3>
+              <div className="settings-row">
+                <div><div className="settings-row-label">Push Notifications</div><div className="settings-row-sub">Get notified when new ads are available</div></div>
+                <div className={`toggle ${notifs?'on':''}`} onClick={()=>setNotifs(v=>!v)}/>
+              </div>
+              <div className="settings-row">
+                <div><div className="settings-row-label">Two-Factor Auth</div><div className="settings-row-sub">Extra security for your account</div></div>
+                <div className={`toggle ${twofa?'on':''}`} onClick={()=>setTwofa(v=>!v)}/>
+              </div>
+            </div>
+            <div className="settings-section">
+              <h3>Connected Wallet</h3>
+              <div style={{background:'var(--bg3)',border:'1px dashed var(--border2)',borderRadius:10,padding:'14px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div>
+                  <div style={{fontSize:13,color:'var(--text2)',marginBottom:2}}>TRC-20 Wallet</div>
+                  <div style={{fontSize:14,fontWeight:600}}>Not connected</div>
+                </div>
+                <button style={{background:'var(--green)',color:'#fff',border:'none',borderRadius:8,padding:'8px 16px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans'}}>Connect</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+function App(){
+  const [user,setUser]=useState(null);
+  const [page,setPage]=useState('dashboard');
+  const [ads,setAds]=useState(MOCK_ADS);
+  const [watchingAd,setWatchingAd]=useState(null);
+  const [toast,setToast]=useState(null);
+  const [score,setScore]=useState(8750);
+
+  function showToast(msg,icon='✅'){setToast({msg,icon});setTimeout(()=>setToast(null),3000);}
+
+  function handleWatchAd(ad){setWatchingAd(ad);}
+  function handleAdComplete(ad){
+    setAds(prev=>prev.map(a=>a.id===ad.id?{...a,watched:true}:a));
+    setScore(s=>s+ad.reward);
+    setWatchingAd(null);
+    showToast(`+${ad.reward} points earned!`,'🎉');
+  }
+
+  const NAV=[
+    {id:'dashboard',label:'Dashboard',icon:'🏠'},
+    {id:'earn',label:'Watch & Earn',icon:'▶️',badge:ads.filter(a=>!a.watched).length},
+    {id:'leaderboard',label:'Leaderboard',icon:'🏆'},
+    {id:'withdraw',label:'Withdraw',icon:'💸'},
+    {id:'profile',label:'Profile',icon:'👤'},
+  ];
+
+  if(!user) return <AuthPage onLogin={u=>setUser(u)}/>;
+
+  return(
+    <div className="app-layout">
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">A</div>
+          <div className="sidebar-logo-text">Ad<span>Earn</span></div>
+        </div>
+        <div className="sidebar-nav">
+          <div className="nav-section">
+            <div className="nav-section-label">Menu</div>
+            {NAV.map(n=>(
+              <button key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}>
+                <span className="nav-item-icon">{n.icon}</span>
+                {n.label}
+                {n.badge>0&&<span className="nav-badge">{n.badge}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="sidebar-user">
+          <div className="sidebar-avatar">{user.name.slice(0,2).toUpperCase()}</div>
+          <div className="sidebar-user-info">
+            <div className="sidebar-username">{user.name}</div>
+            <div className="sidebar-userlevel">⭐ Level 4 · {score.toLocaleString()} pts</div>
+          </div>
+          <button className="sidebar-logout" onClick={()=>setUser(null)} title="Logout">⏻</button>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="main-content">
+        <div className="topbar">
+          <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14,color:'var(--text2)'}}>
+            {NAV.find(n=>n.id===page)?.label}
+          </div>
+          <div className="topbar-right">
+            <div className="topbar-balance">
+              <span className="topbar-balance-icon">💵</span>
+              <span style={{color:'var(--text2)',fontWeight:400}}>Balance:</span>
+              <span style={{color:'var(--green)'}}>${(score/1000).toFixed(3)} USDT</span>
+            </div>
+            <div className="topbar-notif">
+              🔔<span className="notif-dot"/>
+            </div>
+          </div>
+        </div>
+
+        {page==='dashboard'&&<Dashboard user={user} ads={ads} setAds={setAds} onWatchAd={handleWatchAd}/>}
+        {page==='earn'&&<EarnPage ads={ads} onWatchAd={handleWatchAd}/>}
+        {page==='leaderboard'&&<LeaderboardPage/>}
+        {page==='withdraw'&&<WithdrawPage score={score} toast={showToast}/>}
+        {page==='profile'&&<ProfilePage user={user} score={score} ads={ads}/>}
+      </div>
+
+      {watchingAd&&<AdModal ad={watchingAd} onClose={()=>setWatchingAd(null)} onComplete={handleAdComplete}/>}
+      {toast&&<Toast msg={toast.msg} icon={toast.icon} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
