@@ -4,9 +4,34 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>AdEarn — Watch Ads, Earn USDT</title>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIREBASE SETUP — Replace these values with your own Firebase config
+     Get it free at: https://console.firebase.google.com
+     Steps: Create project → Add Web App → Copy config here
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyCMQfcob9oTqE1BUpjhpNYQEnTSjKoOB3Y",
+    authDomain:        "adearn-2d5af.firebaseapp.com",
+    projectId:         "adearn-2d5af",
+    storageBucket:     "adearn-2d5af.firebasestorage.app",
+    messagingSenderId: "347454243510",
+    appId:             "1:347454243510:web:fd18cf19ea1b2b23415c17"
+  };
+</script>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- React -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -28,6 +53,15 @@ input,select{font-family:'DM Sans',sans-serif}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 
+/* ── SPLASH / LOADING ── */
+.splash{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg)}
+.splash-logo{width:60px;height:60px;background:var(--gold);border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#000}
+.splash-text{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.splash-text span{color:var(--gold)}
+.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin-top:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── AUTH ── */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
 .auth-card{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:32px 28px;width:100%;max-width:400px}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;justify-content:center}
@@ -43,11 +77,25 @@ input,select{font-family:'DM Sans',sans-serif}
 .form-input::placeholder{color:var(--text3)}
 .btn-primary{width:100%;background:var(--gold);color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;font-family:'Syne',sans-serif;transition:all .2s;margin-top:4px}
 .btn-primary:hover{background:var(--gold2)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-secondary{width:100%;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:10px;padding:11px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .2s;margin-top:8px}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
 .auth-switch{text-align:center;margin-top:18px;font-size:14px;color:var(--text2)}
 .auth-switch button{background:none;border:none;color:var(--gold);font-weight:600;cursor:pointer}
+.auth-forgot{text-align:right;margin-top:-6px;margin-bottom:14px}
+.auth-forgot button{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;transition:color .15s}
+.auth-forgot button:hover{color:var(--gold)}
 .auth-error{background:#ff4d6a15;border:1px solid #ff4d6a30;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:12px}
 .auth-success{background:#00d08415;border:1px solid #00d08430;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--green);margin-bottom:12px}
+.auth-info{background:#4f8ef715;border:1px solid #4f8ef730;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--blue);margin-bottom:12px}
 
+/* ── FIREBASE NOT CONFIGURED BANNER ── */
+.config-banner{background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:16px 18px;margin-bottom:20px;font-size:13px;line-height:1.6}
+.config-banner strong{color:var(--gold);display:block;margin-bottom:6px;font-family:'Syne',sans-serif;font-size:15px}
+.config-banner a{color:var(--blue);text-decoration:underline}
+.config-banner code{background:var(--bg3);border-radius:4px;padding:1px 6px;font-size:12px;color:var(--text)}
+
+/* ── LAYOUT ── */
 .app-layout{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:230px;min-width:230px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0}
 .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 18px 20px;border-bottom:1px solid var(--border)}
@@ -69,6 +117,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .sidebar-logout{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px;font-size:18px;transition:color .15s}
 .sidebar-logout:hover{color:var(--red)}
 
+/* ── BOTTOM NAV ── */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border2);z-index:50;padding:8px 0 max(8px,env(safe-area-inset-bottom))}
 .bottom-nav-inner{display:flex;justify-content:space-around;align-items:center}
 .bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px;border:none;background:none;color:var(--text3);cursor:pointer;transition:color .15s;min-width:52px;position:relative}
@@ -77,6 +126,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .bn-item-label{font-size:10px;font-weight:600}
 .bn-badge{position:absolute;top:0;right:6px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px}
 
+/* ── TOPBAR ── */
 .topbar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--card);flex-shrink:0}
 .topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text2)}
 .topbar-right{display:flex;align-items:center;gap:10px}
@@ -84,7 +134,8 @@ input,select{font-family:'DM Sans',sans-serif}
 .topbar-notif{width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:16px}
 .notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid var(--card)}
 
-.main-content{flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column}
+/* ── MAIN ── */
+.main-content{flex:1;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
 .page-scroll{flex:1;overflow-y:auto}
 .page-header{padding:24px 20px 0;margin-bottom:20px}
 .page-title{font-size:22px;font-weight:800}
@@ -92,6 +143,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .page-sub{color:var(--text2);font-size:13px;margin-top:2px}
 .page-body{padding:0 16px 100px}
 
+/* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
 .stat-label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
@@ -104,6 +156,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .stat-change{font-size:12px;margin-top:5px}
 .stat-change.up{color:var(--green)}
 
+/* ── ADS ── */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .section-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
 .ads-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
@@ -118,13 +171,15 @@ input,select{font-family:'DM Sans',sans-serif}
 .ad-desc{font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.4}
 .ad-meta{display:flex;align-items:center;justify-content:space-between}
 .ad-duration{font-size:11px;color:var(--text3)}
-.ad-watch-btn{background:var(--gold);color:#000;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.ad-watch-btn{background:var(--gold);color:#000;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
 .ad-watch-btn:hover{background:var(--gold2)}
 .ad-watch-btn.watched{background:var(--bg3);color:var(--green);border:1px solid var(--green);cursor:default}
 
+/* ── PROGRESS ── */
 .progress-bar-wrap{background:var(--bg3);border-radius:100px;height:6px;overflow:hidden}
 .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:100px;transition:width .4s}
 
+/* ── LEADERBOARD ── */
 .lb-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
 .lb-header-row{display:grid;grid-template-columns:44px 1fr 90px 90px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .lb-row{display:grid;grid-template-columns:44px 1fr 90px 90px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center}
@@ -139,6 +194,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .lb-score{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
 .lb-usdt{font-size:12px;color:var(--green);font-weight:600}
 
+/* ── WITHDRAW ── */
 .withdraw-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
 .withdraw-balance-big{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--gold)}
 .w-label{font-size:13px;color:var(--text2);font-weight:500;margin-bottom:5px;display:block}
@@ -155,6 +211,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .status-badge.paid{background:#00d08415;color:var(--green)}
 .status-badge.failed{background:#ff4d6a15;color:var(--red)}
 
+/* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:#000b;backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:200}
 .modal-box{background:var(--card);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;position:relative;animation:slideUp .25s ease}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -169,6 +226,7 @@ input,select{font-family:'DM Sans',sans-serif}
 .ad-play-area{background:var(--bg3);border-radius:12px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:14px;position:relative;overflow:hidden}
 .ad-countdown{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;color:var(--gold);position:absolute;right:14px;bottom:10px}
 
+/* ── PROFILE ── */
 .profile-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px}
 .profile-avatar-big{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#000;margin:0 auto 12px;font-family:'Syne',sans-serif}
 .profile-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;border-top:1px solid var(--border);padding-top:16px;margin-top:16px}
@@ -186,20 +244,21 @@ input,select{font-family:'DM Sans',sans-serif}
 .toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s}
 .toggle.on::after{left:22px}
 
+/* ── MISC ── */
 .chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:11px;color:var(--text2)}
 .chip.green{background:#00d08415;border-color:#00d08430;color:var(--green)}
 .chip.gold{background:#f5c84215;border-color:#f5c84230;color:var(--gold)}
-
 .ref-box{background:var(--bg3);border:1px dashed var(--border2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .ref-code{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;color:var(--gold)}
 .ref-copy{background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--text2);font-size:12px;cursor:pointer;transition:all .15s}
 .ref-copy:hover{border-color:var(--gold);color:var(--gold)}
-
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:12px 18px;font-size:14px;display:flex;align-items:center;gap:8px;z-index:999;white-space:nowrap;box-shadow:0 8px 24px #0006;animation:toastIn .3s ease}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .pulse{animation:pulse 1.5s infinite}
+.saving-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:6px;animation:pulse 1.5s infinite}
 
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
   .sidebar{display:none}
   .bottom-nav{display:block}
@@ -209,15 +268,11 @@ input,select{font-family:'DM Sans',sans-serif}
   .ads-grid{grid-template-columns:1fr 1fr}
   .lb-header-row,.lb-row{grid-template-columns:36px 1fr 70px 70px}
   .history-header,.history-row{grid-template-columns:1fr 56px 64px 64px}
-  .stats-grid{grid-template-columns:1fr 1fr}
-  .modal-box{border-radius:20px 20px 0 0;max-width:100%}
   .page-title{font-size:20px}
   .stat-value{font-size:22px}
   .withdraw-balance-big{font-size:30px}
 }
-@media(max-width:380px){
-  .ads-grid{grid-template-columns:1fr}
-}
+@media(max-width:380px){.ads-grid{grid-template-columns:1fr}}
 @media(min-width:769px){
   .toast{bottom:28px}
   .modal-overlay{align-items:center}
@@ -227,19 +282,35 @@ input,select{font-family:'DM Sans',sans-serif}
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const {useState,useEffect}=React;
 
-const MOCK_ADS=[
-  {id:1,title:"Crypto Exchange",desc:"Learn about the fastest growing crypto exchange",cat:"Finance",emoji:"💹",reward:50,duration:30,watched:false,color:"#1a2a1a"},
-  {id:2,title:"Gaming App Launch",desc:"Brand new mobile RPG – pre-register now",cat:"Gaming",emoji:"🎮",reward:35,duration:20,watched:false,color:"#1a1a2a"},
-  {id:3,title:"Online Store Sale",desc:"Massive discounts on electronics",cat:"Shopping",emoji:"🛍️",reward:25,duration:15,watched:false,color:"#2a1a1a"},
-  {id:4,title:"VPN Service",desc:"Protect your privacy with the fastest VPN",cat:"Tech",emoji:"🔐",reward:40,duration:25,watched:false,color:"#1a2a2a"},
-  {id:5,title:"Learn English App",desc:"Fluent in 90 days – scientifically proven",cat:"Education",emoji:"📚",reward:30,duration:20,watched:false,color:"#2a2a1a"},
-  {id:6,title:"Fitness Tracker",desc:"Track workouts and reach your goals faster",cat:"Health",emoji:"💪",reward:20,duration:10,watched:false,color:"#1a1a1a"},
+<script type="text/babel">
+const {useState, useEffect, useRef} = React;
+
+// ─── FIREBASE INIT ────────────────────────────────────────────────────────────
+let auth = null;
+let db   = null;
+let firebaseReady = false;
+
+try {
+  if (FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY") {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    auth = firebase.auth();
+    db   = firebase.firestore();
+    firebaseReady = true;
+  }
+} catch(e) { console.warn("Firebase init error:", e); }
+
+// ─── MOCK DATA ────────────────────────────────────────────────────────────────
+const ALL_ADS = [
+  {id:"ad1",title:"Crypto Exchange",desc:"Learn about the fastest growing crypto exchange",cat:"Finance",emoji:"💹",reward:50,duration:30,color:"#1a2a1a"},
+  {id:"ad2",title:"Gaming App Launch",desc:"Brand new mobile RPG – pre-register now",cat:"Gaming",emoji:"🎮",reward:35,duration:20,color:"#1a1a2a"},
+  {id:"ad3",title:"Online Store Sale",desc:"Massive discounts on electronics",cat:"Shopping",emoji:"🛍️",reward:25,duration:15,color:"#2a1a1a"},
+  {id:"ad4",title:"VPN Service",desc:"Protect your privacy with the fastest VPN",cat:"Tech",emoji:"🔐",reward:40,duration:25,color:"#1a2a2a"},
+  {id:"ad5",title:"Learn English App",desc:"Fluent in 90 days – scientifically proven",cat:"Education",emoji:"📚",reward:30,duration:20,color:"#2a2a1a"},
+  {id:"ad6",title:"Fitness Tracker",desc:"Track workouts and reach your goals faster",cat:"Health",emoji:"💪",reward:20,duration:10,color:"#1a1a1a"},
 ];
 
-const LEADERBOARD=[
+const LEADERBOARD = [
   {rank:1,name:"Ahmad K.",score:12450,usdt:12.45,avatar:"AK",color:"#f5c842"},
   {rank:2,name:"Sara M.",score:10200,usdt:10.20,avatar:"SM",color:"#a855f7"},
   {rank:3,name:"Bilal R.",score:9800,usdt:9.80,avatar:"BR",color:"#06b6d4"},
@@ -248,152 +319,296 @@ const LEADERBOARD=[
   {rank:6,name:"Usman T.",score:6100,usdt:6.10,avatar:"UT",color:"#4f8ef7"},
 ];
 
-const INIT_HISTORY=[
-  {date:"May 12, 2025",amount:"2.50",score:2500,status:"paid"},
-  {date:"May 5, 2025",amount:"1.75",score:1750,status:"paid"},
-  {date:"Apr 28, 2025",amount:"3.00",score:3000,status:"pending"},
-];
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function Toast({msg, icon}) {
+  return <div className="toast"><span>{icon}</span>{msg}</div>;
+}
 
-function Toast({msg,icon}){return <div className="toast"><span>{icon}</span>{msg}</div>;}
+function Splash({text}) {
+  return (
+    <div className="splash">
+      <div className="splash-logo">A</div>
+      <div className="splash-text">Ad<span>Earn</span></div>
+      <div className="spinner"/>
+      {text && <div style={{fontSize:13,color:'var(--text2)',marginTop:4}}>{text}</div>}
+    </div>
+  );
+}
 
-// ─── AUTH with real register/login logic ─────────────────────────────────────
-function AuthPage({onLogin}){
-  const [mode,setMode]=useState('login');
-  const [form,setForm]=useState({name:'',email:'',password:''});
-  const [err,setErr]=useState('');
-  const [ok,setOk]=useState('');
-  const set=k=>e=>setForm(f=>({...f,[k]:e.target.value}));
+function FirebaseBanner() {
+  return (
+    <div className="config-banner">
+      <strong>⚙️ Firebase Setup Required</strong>
+      To enable cross-device accounts, open <code>index.html</code> and replace the <code>FIREBASE_CONFIG</code> at the top with your own Firebase project details.<br/><br/>
+      <strong style={{color:'var(--text)',fontSize:13}}>Quick steps (all free):</strong><br/>
+      1. Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a><br/>
+      2. Click <strong>"Add project"</strong> → name it <strong>adearn</strong><br/>
+      3. Click <strong>"Add app" → Web</strong><br/>
+      4. Copy the config object and paste it in <code>index.html</code><br/>
+      5. In Firebase console → <strong>Authentication</strong> → Enable <strong>Email/Password</strong><br/>
+      6. In Firebase console → <strong>Firestore Database</strong> → Create database (test mode)<br/>
+    </div>
+  );
+}
 
-  function getUsers(){
-    try{return JSON.parse(localStorage.getItem('ae_users')||'[]');}
-    catch{return [];}
+// ─── AUTH PAGE ────────────────────────────────────────────────────────────────
+function AuthPage({onLogin}) {
+  const [mode, setMode]   = useState('login'); // login | register | forgot
+  const [form, setForm]   = useState({name:'', email:'', password:''});
+  const [err,  setErr]    = useState('');
+  const [ok,   setOk]     = useState('');
+  const [busy, setBusy]   = useState(false);
+  const set = k => e => setForm(f => ({...f, [k]: e.target.value}));
+
+  // ── LOCAL fallback (when Firebase not configured) ──
+  function getLocalUsers() {
+    try { return JSON.parse(localStorage.getItem('ae_users') || '[]'); }
+    catch { return []; }
   }
-  function saveUsers(u){localStorage.setItem('ae_users',JSON.stringify(u));}
+  function saveLocalUsers(u) { localStorage.setItem('ae_users', JSON.stringify(u)); }
 
-  function submit(e){
+  async function submit(e) {
     e.preventDefault();
-    setErr('');setOk('');
-    const email=form.email.trim().toLowerCase();
-    const pass=form.password;
-    if(!email||!pass){setErr('Please fill all fields.');return;}
-    if(pass.length<6){setErr('Password must be at least 6 characters.');return;}
-    const users=getUsers();
+    setErr(''); setOk(''); setBusy(true);
+    const email = form.email.trim().toLowerCase();
+    const pass  = form.password;
 
-    if(mode==='register'){
-      if(!form.name.trim()){setErr('Please enter your name.');return;}
-      if(users.find(u=>u.email===email)){
-        setErr('Email already registered. Please sign in.');return;
+    // ── FORGOT PASSWORD ──
+    if (mode === 'forgot') {
+      if (!email) { setErr('Enter your email address.'); setBusy(false); return; }
+      if (firebaseReady) {
+        try {
+          await auth.sendPasswordResetEmail(email);
+          setOk('✅ Password reset email sent! Check your inbox (and spam folder).');
+          setMode('login');
+        } catch(ex) {
+          setErr(ex.code === 'auth/user-not-found'
+            ? 'No account found with this email.'
+            : 'Failed to send reset email. Try again.');
+        }
+      } else {
+        // Local fallback
+        const users = getLocalUsers();
+        if (!users.find(u => u.email === email)) {
+          setErr('No account found with this email.');
+        } else {
+          setOk('✅ (Demo mode) In a real setup, a password reset email would be sent to ' + email);
+          setMode('login');
+        }
       }
-      const newUser={name:form.name.trim(),email,password:pass,score:0,joined:Date.now()};
-      saveUsers([...users,newUser]);
-      setOk('✅ Account created! You can now sign in.');
-      setMode('login');
-      setForm(f=>({...f,name:'',password:''}));
-    } else {
-      const found=users.find(u=>u.email===email&&u.password===pass);
-      if(!found){
-        setErr('Wrong email or password. Not registered yet? Create an account first.');return;
-      }
-      onLogin(found);
+      setBusy(false); return;
     }
+
+    if (!email || !pass) { setErr('Please fill all fields.'); setBusy(false); return; }
+    if (pass.length < 6) { setErr('Password must be at least 6 characters.'); setBusy(false); return; }
+
+    // ── FIREBASE AUTH ──
+    if (firebaseReady) {
+      try {
+        if (mode === 'register') {
+          if (!form.name.trim()) { setErr('Please enter your name.'); setBusy(false); return; }
+          const cred = await auth.createUserWithEmailAndPassword(email, pass);
+          await cred.user.updateProfile({displayName: form.name.trim()});
+          // Create user doc in Firestore
+          await db.collection('users').doc(cred.user.uid).set({
+            name:       form.name.trim(),
+            email:      email,
+            score:      0,
+            adsWatched: [],
+            withdrawals:[],
+            joinedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          // Auto login after register
+          onLogin({
+            uid:   cred.user.uid,
+            name:  form.name.trim(),
+            email: email,
+            score: 0,
+            adsWatched:  [],
+            withdrawals: [],
+          });
+        } else {
+          const cred = await auth.signInWithEmailAndPassword(email, pass);
+          const snap = await db.collection('users').doc(cred.user.uid).get();
+          const data = snap.data() || {};
+          onLogin({
+            uid:         cred.user.uid,
+            name:        data.name || cred.user.displayName || email.split('@')[0],
+            email:       email,
+            score:       data.score || 0,
+            adsWatched:  data.adsWatched  || [],
+            withdrawals: data.withdrawals || [],
+          });
+        }
+      } catch(ex) {
+        const msgs = {
+          'auth/email-already-in-use':    'Email already registered. Please sign in.',
+          'auth/user-not-found':          'No account with this email. Please register first.',
+          'auth/wrong-password':          'Wrong password. Try again or reset it.',
+          'auth/invalid-email':           'Invalid email address.',
+          'auth/too-many-requests':       'Too many attempts. Try again later.',
+          'auth/network-request-failed':  'Network error. Check your connection.',
+        };
+        setErr(msgs[ex.code] || ex.message);
+      }
+    } else {
+      // ── LOCAL FALLBACK ──
+      const users = getLocalUsers();
+      if (mode === 'register') {
+        if (!form.name.trim()) { setErr('Please enter your name.'); setBusy(false); return; }
+        if (users.find(u => u.email === email)) { setErr('Email already registered. Please sign in.'); setBusy(false); return; }
+        const nu = {uid: Date.now().toString(), name:form.name.trim(), email, password:pass, score:0, adsWatched:[], withdrawals:[]};
+        saveLocalUsers([...users, nu]);
+        onLogin(nu);
+      } else {
+        const found = users.find(u => u.email === email && u.password === pass);
+        if (!found) { setErr('Wrong email or password. Not registered yet? Create an account.'); setBusy(false); return; }
+        onLogin(found);
+      }
+    }
+    setBusy(false);
   }
 
-  return(
+  return (
     <div className="auth-wrap">
       <div className="auth-card">
         <div className="auth-logo">
           <div className="auth-logo-icon">A</div>
           <div className="auth-logo-text">Ad<span>Earn</span></div>
         </div>
-        <h2 className="auth-title">{mode==='login'?'Welcome Back':'Create Account'}</h2>
-        <p className="auth-sub">{mode==='login'?'Sign in to start earning USDT':'Join and earn USDT by watching ads'}</p>
+
+        {!firebaseReady && mode !== 'forgot' && (
+          <div className="auth-info">
+            ℹ️ Running in <strong>demo mode</strong> (device-only). Set up Firebase for cross-device accounts.
+          </div>
+        )}
+
+        <h2 className="auth-title">
+          {mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : 'Reset Password'}
+        </h2>
+        <p className="auth-sub">
+          {mode === 'login'    ? 'Sign in to start earning USDT'
+         : mode === 'register' ? 'Join and earn USDT by watching ads'
+         : 'Enter your email to receive a reset link'}
+        </p>
+
         <form onSubmit={submit}>
-          {err&&<div className="auth-error">⚠️ {err}</div>}
-          {ok&&<div className="auth-success">{ok}</div>}
-          {mode==='register'&&
+          {err && <div className="auth-error">⚠️ {err}</div>}
+          {ok  && <div className="auth-success">{ok}</div>}
+
+          {mode === 'register' && (
             <div className="form-group">
               <label className="form-label">Full Name</label>
               <input className="form-input" placeholder="Hamza Khan" value={form.name} onChange={set('name')}/>
-            </div>}
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label">Email Address</label>
             <input className="form-input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} autoComplete="email"/>
           </div>
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input className="form-input" type="password" placeholder="Min 6 characters" value={form.password} onChange={set('password')} autoComplete={mode==='login'?'current-password':'new-password'}/>
-          </div>
-          <button className="btn-primary" type="submit">
-            {mode==='login'?'Sign In →':'Create Account →'}
+
+          {mode !== 'forgot' && (
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input className="form-input" type="password" placeholder="Min 6 characters" value={form.password} onChange={set('password')} autoComplete={mode==='login'?'current-password':'new-password'}/>
+            </div>
+          )}
+
+          {mode === 'login' && (
+            <div className="auth-forgot">
+              <button type="button" onClick={()=>{setErr('');setOk('');setMode('forgot');}}>Forgot password?</button>
+            </div>
+          )}
+
+          <button className="btn-primary" type="submit" disabled={busy}>
+            {busy ? '⏳ Please wait…'
+              : mode === 'login'    ? 'Sign In →'
+              : mode === 'register' ? 'Create Account →'
+              : 'Send Reset Email →'}
           </button>
+
+          {mode === 'forgot' && (
+            <button className="btn-secondary" type="button" onClick={()=>{setErr('');setOk('');setMode('login');}}>
+              ← Back to Sign In
+            </button>
+          )}
         </form>
-        <div className="auth-switch">
-          {mode==='login'
-            ?<>No account yet? <button onClick={()=>{setErr('');setOk('');setMode('register');}}>Register here</button></>
-            :<>Already registered? <button onClick={()=>{setErr('');setOk('');setMode('login');}}>Sign In</button></>}
-        </div>
+
+        {mode !== 'forgot' && (
+          <div className="auth-switch">
+            {mode === 'login'
+              ? <>No account yet? <button onClick={()=>{setErr('');setOk('');setMode('register');}}>Register here</button></>
+              : <>Already registered? <button onClick={()=>{setErr('');setOk('');setMode('login');}}>Sign In</button></>}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ─── AD MODAL ─────────────────────────────────────────────────────────────────
-function AdModal({ad,onClose,onComplete}){
-  const [phase,setPhase]=useState('preview');
-  const [timer,setTimer]=useState(ad.duration);
-  const [progress,setProgress]=useState(0);
-  useEffect(()=>{
-    if(phase!=='watching')return;
-    const iv=setInterval(()=>{
-      setTimer(t=>{
-        if(t<=1){clearInterval(iv);setPhase('done');return 0;}
-        return t-1;
+function AdModal({ad, onClose, onComplete}) {
+  const [phase, setPhase]       = useState('preview');
+  const [timer, setTimer]       = useState(ad.duration);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (phase !== 'watching') return;
+    const iv = setInterval(() => {
+      setTimer(t => {
+        if (t <= 1) { clearInterval(iv); setPhase('done'); return 0; }
+        return t - 1;
       });
-      setProgress(p=>Math.min(100,p+(100/ad.duration)));
-    },1000);
-    return()=>clearInterval(iv);
-  },[phase]);
-  return(
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&phase!=='watching'&&onClose()}>
+      setProgress(p => Math.min(100, p + (100 / ad.duration)));
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [phase]);
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && phase !== 'watching' && onClose()}>
       <div className="modal-box">
         <div className="modal-handle"/>
-        {phase!=='watching'&&<button className="modal-close" onClick={()=>phase!=='watching'&&onClose()}>✕</button>}
-        {phase==='preview'&&<>
+        {phase !== 'watching' && <button className="modal-close" onClick={() => phase !== 'watching' && onClose()}>✕</button>}
+
+        {phase === 'preview' && <>
           <div className="modal-title">{ad.title}</div>
           <div className="modal-sub">{ad.cat} · {ad.duration}s · +{ad.reward} pts</div>
-          <div className="ad-play-area" style={{background:ad.color}}>
+          <div className="ad-play-area" style={{background: ad.color}}>
             <span style={{fontSize:48}}>{ad.emoji}</span>
-            <span style={{fontSize:12,color:'var(--text2)',marginTop:6,padding:'0 16px',textAlign:'center'}}>{ad.desc}</span>
+            <span style={{fontSize:12, color:'var(--text2)', marginTop:6, padding:'0 16px', textAlign:'center'}}>{ad.desc}</span>
           </div>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:14}}>
-            <span style={{fontSize:12,color:'var(--text2)'}}>⏱ {ad.duration} seconds</span>
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:14}}>
+            <span style={{fontSize:12, color:'var(--text2)'}}>⏱ {ad.duration} seconds</span>
             <span className="chip gold">+{ad.reward} pts</span>
           </div>
-          <button className="modal-btn" onClick={()=>setPhase('watching')}>▶ Watch Ad</button>
+          <button className="modal-btn" onClick={() => setPhase('watching')}>▶ Watch Ad</button>
         </>}
-        {phase==='watching'&&<>
+
+        {phase === 'watching' && <>
           <div className="modal-title">Watching Ad…</div>
           <div className="modal-sub">Please don't close this window</div>
-          <div className="ad-play-area" style={{background:ad.color}}>
+          <div className="ad-play-area" style={{background: ad.color}}>
             <span style={{fontSize:48}} className="pulse">{ad.emoji}</span>
             <div className="ad-countdown">{timer}</div>
           </div>
           <div className="progress-bar-wrap" style={{marginBottom:10}}>
-            <div className="progress-bar-fill" style={{width:progress+'%'}}/>
+            <div className="progress-bar-fill" style={{width: progress + '%'}}/>
           </div>
-          <p style={{textAlign:'center',fontSize:13,color:'var(--text2)'}}>{timer}s remaining…</p>
+          <p style={{textAlign:'center', fontSize:13, color:'var(--text2)'}}>{timer}s remaining…</p>
         </>}
-        {phase==='done'&&<>
-          <div style={{textAlign:'center',paddingTop:4}}>
-            <div style={{fontSize:48,marginBottom:8}}>🎉</div>
+
+        {phase === 'done' && <>
+          <div style={{textAlign:'center', paddingTop:4}}>
+            <div style={{fontSize:48, marginBottom:8}}>🎉</div>
             <div className="modal-title">Ad Watched!</div>
             <div className="modal-sub">Points added to your balance</div>
             <div className="modal-reward">+{ad.reward}</div>
             <div className="modal-reward-label">points earned</div>
-            <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 16px',marginBottom:18,fontSize:13,color:'var(--text2)'}}>
-              ≈ ${(ad.reward/1000).toFixed(4)} USDT equivalent
+            <div style={{background:'var(--bg3)', borderRadius:10, padding:'10px 16px', marginBottom:18, fontSize:13, color:'var(--text2)'}}>
+              ≈ ${(ad.reward / 1000).toFixed(4)} USDT equivalent
             </div>
-            <button className="modal-btn" onClick={()=>onComplete(ad)}>Claim & Continue</button>
+            <button className="modal-btn" onClick={() => onComplete(ad)}>Claim & Continue</button>
           </div>
         </>}
       </div>
@@ -401,15 +616,18 @@ function AdModal({ad,onClose,onComplete}){
   );
 }
 
-// ─── PAGES ────────────────────────────────────────────────────────────────────
-function Dashboard({user,ads,score,onWatchAd}){
-  const watched=ads.filter(a=>a.watched);
-  const todayPts=watched.reduce((s,a)=>s+a.reward,0);
-  const goal=6;
-  return(
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function Dashboard({user, ads, score, onWatchAd}) {
+  const watched     = ads.filter(a => a.watched);
+  const todayPts    = watched.reduce((s, a) => s + a.reward, 0);
+  const goal        = 6;
+  const usdtBal     = (score / 1000).toFixed(3);
+  const refCode     = 'AE-' + user.name.toUpperCase().replace(/\s/g,'').slice(0,6);
+
+  return (
     <div>
       <div className="page-header">
-        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
+        <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:8}}>
           <div>
             <h1 className="page-title">Hello, <span>{user.name.split(' ')[0]}</span> 👋</h1>
             <p className="page-sub">Watch ads and earn USDT</p>
@@ -426,12 +644,12 @@ function Dashboard({user,ads,score,onWatchAd}){
           </div>
           <div className="stat-card">
             <div className="stat-label">USDT Balance<div className="stat-icon green">💵</div></div>
-            <div className="stat-value" style={{color:'var(--green)',fontSize:20}}>${(score/1000).toFixed(3)}</div>
+            <div className="stat-value" style={{color:'var(--green)', fontSize:20}}>${usdtBal}</div>
             <div className="stat-change up">Withdrawable</div>
           </div>
           <div className="stat-card">
             <div className="stat-label">Ads Watched<div className="stat-icon blue">📺</div></div>
-            <div className="stat-value">{87+watched.length}</div>
+            <div className="stat-value">{user.adsWatched.length}</div>
             <div className="stat-change up">↑ {watched.length} today</div>
           </div>
           <div className="stat-card">
@@ -440,27 +658,30 @@ function Dashboard({user,ads,score,onWatchAd}){
             <div className="stat-change" style={{color:'var(--text2)'}}>Top 10</div>
           </div>
         </div>
-        <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:16,marginBottom:20}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+
+        {/* Daily goal */}
+        <div style={{background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, padding:16, marginBottom:20}}>
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
             <div>
-              <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14}}>Daily Goal</div>
-              <div style={{fontSize:12,color:'var(--text2)'}}>Watch {Math.max(0,goal-watched.length)} more ads today</div>
+              <div style={{fontFamily:'Syne', fontWeight:700, fontSize:14}}>Daily Goal</div>
+              <div style={{fontSize:12, color:'var(--text2)'}}>Watch {Math.max(0, goal - watched.length)} more ads today</div>
             </div>
-            <div style={{fontFamily:'Syne',fontSize:18,fontWeight:800,color:'var(--gold)'}}>{watched.length}/{goal}</div>
+            <div style={{fontFamily:'Syne', fontSize:18, fontWeight:800, color:'var(--gold)'}}>{watched.length}/{goal}</div>
           </div>
           <div className="progress-bar-wrap">
-            <div className="progress-bar-fill" style={{width:Math.min(100,(watched.length/goal)*100)+'%'}}/>
+            <div className="progress-bar-fill" style={{width: Math.min(100, (watched.length / goal) * 100) + '%'}}/>
           </div>
-          {watched.length>=goal&&<div style={{marginTop:8,fontSize:12,color:'var(--green)',fontWeight:600}}>🎉 Daily goal reached! Bonus +100 pts!</div>}
+          {watched.length >= goal && <div style={{marginTop:8, fontSize:12, color:'var(--green)', fontWeight:600}}>🎉 Daily goal reached! Bonus +100 pts!</div>}
         </div>
+
         <div className="section-header">
           <div className="section-title">Available Ads</div>
-          <div style={{fontSize:12,color:'var(--text2)'}}>1 pt = $0.001</div>
+          <div style={{fontSize:12, color:'var(--text2)'}}>1 pt = $0.001</div>
         </div>
         <div className="ads-grid">
-          {ads.map(ad=>(
-            <div className={`ad-card ${ad.watched?'locked':''}`} key={ad.id}>
-              <div className="ad-thumb" style={{background:ad.color}}>
+          {ads.map(ad => (
+            <div className={`ad-card ${ad.watched ? 'locked' : ''}`} key={ad.id}>
+              <div className="ad-thumb" style={{background: ad.color}}>
                 {ad.emoji}
                 <span className="ad-thumb-cat">{ad.cat}</span>
                 <span className="ad-thumb-reward">+{ad.reward}</span>
@@ -471,51 +692,58 @@ function Dashboard({user,ads,score,onWatchAd}){
                 <div className="ad-meta">
                   <span className="ad-duration">⏱{ad.duration}s</span>
                   {ad.watched
-                    ?<button className="ad-watch-btn watched" disabled>✓ Done</button>
-                    :<button className="ad-watch-btn" onClick={()=>onWatchAd(ad)}>Watch</button>}
+                    ? <button className="ad-watch-btn watched" disabled>✓ Done</button>
+                    : <button className="ad-watch-btn" onClick={() => onWatchAd(ad)}>Watch</button>}
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:16}}>
-          <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,marginBottom:8}}>Refer & Earn +200 pts</div>
+
+        {/* Referral */}
+        <div style={{background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, padding:16}}>
+          <div style={{fontFamily:'Syne', fontWeight:700, fontSize:15, marginBottom:8}}>Refer & Earn +200 pts</div>
           <div className="ref-box">
             <div>
-              <div style={{fontSize:11,color:'var(--text2)',marginBottom:2}}>Your Code</div>
-              <div className="ref-code">AE-{user.name.toUpperCase().replace(/\s/g,'').slice(0,6)}</div>
+              <div style={{fontSize:11, color:'var(--text2)', marginBottom:2}}>Your Code</div>
+              <div className="ref-code">{refCode}</div>
             </div>
-            <button className="ref-copy" onClick={()=>alert('Referral code copied!')}>📋 Copy</button>
+            <button className="ref-copy" onClick={() => {navigator.clipboard.writeText(refCode).catch(()=>{}); alert('Code copied!');}}>📋 Copy</button>
           </div>
-          <div style={{fontSize:12,color:'var(--text2)'}}>When friends join with your code, you both earn bonus points!</div>
+          <div style={{fontSize:12, color:'var(--text2)'}}>When friends join with your code, you both earn bonus points!</div>
         </div>
       </div>
     </div>
   );
 }
 
-function EarnPage({ads,onWatchAd}){
-  const [filter,setFilter]=useState('all');
-  const cats=['all','Finance','Gaming','Shopping','Tech','Education','Health'];
-  const filtered=filter==='all'?ads:ads.filter(a=>a.cat===filter);
-  return(
+// ─── EARN PAGE ────────────────────────────────────────────────────────────────
+function EarnPage({ads, onWatchAd}) {
+  const [filter, setFilter] = useState('all');
+  const cats     = ['all','Finance','Gaming','Shopping','Tech','Education','Health'];
+  const filtered = filter === 'all' ? ads : ads.filter(a => a.cat === filter);
+
+  return (
     <div>
       <div className="page-header">
         <h1 className="page-title">Watch & <span>Earn</span></h1>
         <p className="page-sub">Watch fully to earn points</p>
       </div>
       <div className="page-body">
-        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16,paddingBottom:4,overflowX:'auto'}}>
-          {cats.map(c=>(
-            <button key={c} onClick={()=>setFilter(c)} style={{background:filter===c?'var(--gold)':'var(--card)',color:filter===c?'#000':'var(--text2)',border:`1px solid ${filter===c?'var(--gold)':'var(--border)'}`,borderRadius:8,padding:'6px 14px',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all .15s',whiteSpace:'nowrap',flexShrink:0}}>
-              {c==='all'?'All':c}
+        <div style={{display:'flex', gap:6, flexWrap:'wrap', marginBottom:16, paddingBottom:4, overflowX:'auto'}}>
+          {cats.map(c => (
+            <button key={c} onClick={() => setFilter(c)}
+              style={{background: filter===c?'var(--gold)':'var(--card)', color: filter===c?'#000':'var(--text2)',
+                border:`1px solid ${filter===c?'var(--gold)':'var(--border)'}`,
+                borderRadius:8, padding:'6px 14px', fontSize:12, fontWeight:600, cursor:'pointer', transition:'all .15s', whiteSpace:'nowrap', flexShrink:0}}>
+              {c === 'all' ? 'All' : c}
             </button>
           ))}
         </div>
         <div className="ads-grid">
-          {filtered.map(ad=>(
+          {filtered.map(ad => (
             <div className={`ad-card ${ad.watched?'locked':''}`} key={ad.id}>
-              <div className="ad-thumb" style={{background:ad.color}}>
+              <div className="ad-thumb" style={{background: ad.color}}>
                 {ad.emoji}
                 <span className="ad-thumb-cat">{ad.cat}</span>
                 <span className="ad-thumb-reward">+{ad.reward}</span>
@@ -526,52 +754,55 @@ function EarnPage({ads,onWatchAd}){
                 <div className="ad-meta">
                   <span className="ad-duration">⏱{ad.duration}s</span>
                   {ad.watched
-                    ?<button className="ad-watch-btn watched" disabled>✓ Done</button>
-                    :<button className="ad-watch-btn" onClick={()=>onWatchAd(ad)}>Watch</button>}
+                    ? <button className="ad-watch-btn watched" disabled>✓ Done</button>
+                    : <button className="ad-watch-btn" onClick={() => onWatchAd(ad)}>Watch</button>}
                 </div>
               </div>
             </div>
           ))}
-          {filtered.length===0&&<div style={{gridColumn:'1/-1',textAlign:'center',padding:'36px 0',color:'var(--text3)'}}>
-            <div style={{fontSize:32,marginBottom:8}}>📭</div>
-            <div style={{fontSize:13}}>No ads in this category</div>
-          </div>}
+          {filtered.length === 0 && (
+            <div style={{gridColumn:'1/-1', textAlign:'center', padding:'36px 0', color:'var(--text3)'}}>
+              <div style={{fontSize:32, marginBottom:8}}>📭</div>
+              <div style={{fontSize:13}}>No ads in this category</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function LeaderboardPage(){
-  return(
+// ─── LEADERBOARD ──────────────────────────────────────────────────────────────
+function LeaderboardPage() {
+  return (
     <div>
       <div className="page-header">
         <h1 className="page-title">🏆 <span>Leaderboard</span></h1>
         <p className="page-sub">Top earners this month</p>
       </div>
       <div className="page-body">
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1.15fr 1fr',gap:10,marginBottom:20}}>
-          {[LEADERBOARD[1],LEADERBOARD[0],LEADERBOARD[2]].map((u,i)=>{
-            const pos=[2,1,3][i];
-            const col=['#aaa','var(--gold)','#cd7f32'][i];
-            return(
-              <div key={u.rank} style={{background:'var(--card)',border:`1px solid ${i===1?'var(--gold)':'var(--border)'}`,borderRadius:14,padding:14,textAlign:'center',paddingTop:i===1?24:14}}>
-                <div style={{width:40,height:40,borderRadius:'50%',background:`${col}25`,border:`2px solid ${col}`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:13,color:col,margin:'0 auto 8px',fontFamily:'Syne'}}>{u.avatar}</div>
-                <div style={{fontSize:11,fontWeight:600,marginBottom:2}}>{u.name}</div>
-                <div style={{fontFamily:'Syne',fontWeight:800,fontSize:14,color:col}}>#{pos}</div>
-                <div style={{fontSize:11,color:'var(--green)',marginTop:2}}>${u.usdt}</div>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1.15fr 1fr', gap:10, marginBottom:20}}>
+          {[LEADERBOARD[1], LEADERBOARD[0], LEADERBOARD[2]].map((u, i) => {
+            const col = ['#aaa','var(--gold)','#cd7f32'][i];
+            const pos = [2,1,3][i];
+            return (
+              <div key={u.rank} style={{background:'var(--card)', border:`1px solid ${i===1?'var(--gold)':'var(--border)'}`, borderRadius:14, padding:14, textAlign:'center', paddingTop:i===1?24:14}}>
+                <div style={{width:40, height:40, borderRadius:'50%', background:`${col}25`, border:`2px solid ${col}`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:13, color:col, margin:'0 auto 8px', fontFamily:'Syne'}}>{u.avatar}</div>
+                <div style={{fontSize:11, fontWeight:600, marginBottom:2}}>{u.name}</div>
+                <div style={{fontFamily:'Syne', fontWeight:800, fontSize:14, color:col}}>#{pos}</div>
+                <div style={{fontSize:11, color:'var(--green)', marginTop:2}}>${u.usdt}</div>
               </div>
             );
           })}
         </div>
         <div className="lb-card">
           <div className="lb-header-row"><div>Rank</div><div>User</div><div>Score</div><div>USDT</div></div>
-          {LEADERBOARD.map(u=>(
+          {LEADERBOARD.map(u => (
             <div className={`lb-row ${u.isMe?'me':''}`} key={u.rank}>
               <div className={`lb-rank ${u.rank===1?'gold':u.rank===2?'silver':u.rank===3?'bronze':''}`}>#{u.rank}</div>
               <div className="lb-user">
-                <div className="lb-avatar" style={{background:u.color+'30',color:u.color}}>{u.avatar||'👤'}</div>
-                <div className="lb-name">{u.name}{u.isMe&&<span className="lb-badge">YOU</span>}</div>
+                <div className="lb-avatar" style={{background:u.color+'30', color:u.color}}>{u.avatar||'👤'}</div>
+                <div className="lb-name">{u.name}{u.isMe && <span className="lb-badge">YOU</span>}</div>
               </div>
               <div className="lb-score">{u.score.toLocaleString()}</div>
               <div className="lb-usdt">${u.usdt.toFixed(2)}</div>
@@ -583,20 +814,25 @@ function LeaderboardPage(){
   );
 }
 
-function WithdrawPage({score,showToast}){
-  const [wallet,setWallet]=useState('');
-  const [amount,setAmount]=useState('');
-  const [history,setHistory]=useState(INIT_HISTORY);
-  const bal=(score/1000).toFixed(3);
-  function submit(){
-    if(!wallet.trim()){showToast('Enter your wallet address','⚠️');return;}
-    if(!amount||parseFloat(amount)<1){showToast('Minimum withdrawal is $1.00','⚠️');return;}
-    if(parseFloat(amount)>parseFloat(bal)){showToast('Insufficient balance','❌');return;}
-    setHistory(h=>[{date:'Today',amount:parseFloat(amount).toFixed(2),score:Math.round(parseFloat(amount)*1000),status:'pending'},...h]);
+// ─── WITHDRAW ─────────────────────────────────────────────────────────────────
+function WithdrawPage({user, score, showToast, onWithdrawal}) {
+  const [wallet, setWallet] = useState('');
+  const [amount, setAmount] = useState('');
+  const bal = (score / 1000).toFixed(3);
+
+  function submit() {
+    if (!wallet.trim()) { showToast('Enter your wallet address','⚠️'); return; }
+    if (!amount || parseFloat(amount) < 1) { showToast('Minimum withdrawal is $1.00','⚠️'); return; }
+    if (parseFloat(amount) > parseFloat(bal)) { showToast('Insufficient balance','❌'); return; }
+    const record = {date: new Date().toLocaleDateString(), amount: parseFloat(amount).toFixed(2), score: Math.round(parseFloat(amount)*1000), status:'pending', ts: Date.now()};
+    onWithdrawal(record);
     showToast(`$${amount} USDT withdrawal submitted!`,'✅');
-    setWallet('');setAmount('');
+    setWallet(''); setAmount('');
   }
-  return(
+
+  const history = user.withdrawals || [];
+
+  return (
     <div>
       <div className="page-header">
         <h1 className="page-title">Withdraw <span>USDT</span></h1>
@@ -604,10 +840,10 @@ function WithdrawPage({score,showToast}){
       </div>
       <div className="page-body">
         <div className="withdraw-card">
-          <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>Available Balance</div>
+          <div style={{fontSize:12, color:'var(--text2)', marginBottom:4}}>Available Balance</div>
           <div className="withdraw-balance-big">${bal}</div>
-          <div style={{fontSize:12,color:'var(--text2)',marginBottom:16}}>{score.toLocaleString()} pts · 1 pt = $0.001</div>
-          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          <div style={{fontSize:12, color:'var(--text2)', marginBottom:16}}>{score.toLocaleString()} pts · 1 pt = $0.001</div>
+          <div style={{display:'flex', flexDirection:'column', gap:12}}>
             <div>
               <label className="w-label">USDT Wallet Address (TRC-20)</label>
               <input className="w-input" placeholder="TYour...WalletAddress" value={wallet} onChange={e=>setWallet(e.target.value)}/>
@@ -616,68 +852,110 @@ function WithdrawPage({score,showToast}){
               <label className="w-label">Amount (USDT)</label>
               <input className="w-input" type="number" placeholder="1.00" min="1" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-              <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 12px',fontSize:12,color:'var(--text2)'}}>
-                <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Minimum</div>$1.00 USDT
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10}}>
+              <div style={{background:'var(--bg3)', borderRadius:10, padding:'10px 12px', fontSize:12, color:'var(--text2)'}}>
+                <div style={{fontWeight:600, color:'var(--text)', marginBottom:2}}>Minimum</div>$1.00 USDT
               </div>
-              <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 12px',fontSize:12,color:'var(--text2)'}}>
-                <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Processing</div>1–24 hours
+              <div style={{background:'var(--bg3)', borderRadius:10, padding:'10px 12px', fontSize:12, color:'var(--text2)'}}>
+                <div style={{fontWeight:600, color:'var(--text)', marginBottom:2}}>Processing</div>1–24 hours
               </div>
             </div>
             <button className="w-submit" onClick={submit}>Request Withdrawal →</button>
-            <div style={{fontSize:11,color:'var(--text3)',textAlign:'center'}}>⚠️ Double-check your wallet address before submitting</div>
+            <div style={{fontSize:11, color:'var(--text3)', textAlign:'center'}}>⚠️ Double-check wallet address. Wrong address = lost funds.</div>
           </div>
         </div>
+
         <div className="section-header"><div className="section-title">Withdrawal History</div></div>
         <div className="history-table">
           <div className="history-header"><div>Date</div><div>Score</div><div>Amount</div><div>Status</div></div>
-          {history.map((h,i)=>(
-            <div className="history-row" key={i}>
-              <div style={{color:'var(--text2)'}}>{h.date}</div>
-              <div>{h.score.toLocaleString()}</div>
-              <div style={{fontFamily:'Syne',fontWeight:700,color:'var(--green)'}}>${h.amount}</div>
-              <div><span className={`status-badge ${h.status}`}>{h.status.charAt(0).toUpperCase()+h.status.slice(1)}</span></div>
-            </div>
-          ))}
+          {history.length === 0
+            ? <div style={{padding:'20px', textAlign:'center', color:'var(--text3)', fontSize:13}}>No withdrawals yet</div>
+            : [...history].reverse().map((h, i) => (
+              <div className="history-row" key={i}>
+                <div style={{color:'var(--text2)'}}>{h.date}</div>
+                <div>{h.score?.toLocaleString()}</div>
+                <div style={{fontFamily:'Syne', fontWeight:700, color:'var(--green)'}}>${h.amount}</div>
+                <div><span className={`status-badge ${h.status}`}>{h.status.charAt(0).toUpperCase()+h.status.slice(1)}</span></div>
+              </div>
+            ))
+          }
         </div>
       </div>
     </div>
   );
 }
 
-function ProfilePage({user,score,ads}){
-  const [notifs,setNotifs]=useState(true);
-  const [twofa,setTwofa]=useState(false);
-  const initials=user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  return(
+// ─── PROFILE ──────────────────────────────────────────────────────────────────
+function ProfilePage({user, score, ads, onSignOut}) {
+  const [notifs, setNotifs] = useState(true);
+  const [twofa,  setTwofa]  = useState(false);
+  const initials = user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const totalWatched = user.adsWatched.length;
+
+  return (
     <div>
       <div className="page-header">
         <h1 className="page-title">My <span>Profile</span></h1>
         <p className="page-sub">Account settings and stats</p>
       </div>
       <div className="page-body">
+        {!firebaseReady && <FirebaseBanner/>}
+
         <div className="profile-card" style={{textAlign:'center'}}>
           <div className="profile-avatar-big">{initials}</div>
-          <div style={{fontFamily:'Syne',fontSize:20,fontWeight:800}}>{user.name}</div>
-          <div style={{fontSize:13,color:'var(--text2)',marginBottom:12}}>{user.email}</div>
-          <span style={{background:'linear-gradient(135deg,var(--gold),var(--gold2))',color:'#000',fontSize:12,fontWeight:700,padding:'4px 14px',borderRadius:20,fontFamily:'Syne'}}>⭐ Level 4 Earner</span>
+          <div style={{fontFamily:'Syne', fontSize:20, fontWeight:800}}>{user.name}</div>
+          <div style={{fontSize:13, color:'var(--text2)', marginBottom:12}}>{user.email}</div>
+          <span style={{background:'linear-gradient(135deg,var(--gold),var(--gold2))', color:'#000', fontSize:12, fontWeight:700, padding:'4px 14px', borderRadius:20, fontFamily:'Syne'}}>⭐ Level 4 Earner</span>
           <div className="profile-stats">
-            <div className="profile-stat"><div className="profile-stat-val" style={{color:'var(--gold)'}}>{score.toLocaleString()}</div><div className="profile-stat-label">Total Score</div></div>
-            <div className="profile-stat"><div className="profile-stat-val" style={{color:'var(--green)'}}>${(score/1000).toFixed(2)}</div><div className="profile-stat-label">USDT Earned</div></div>
-            <div className="profile-stat"><div className="profile-stat-val">{87+ads.filter(a=>a.watched).length}</div><div className="profile-stat-label">Ads Watched</div></div>
-            <div className="profile-stat"><div className="profile-stat-val">0</div><div className="profile-stat-label">Referrals</div></div>
+            <div className="profile-stat">
+              <div className="profile-stat-val" style={{color:'var(--gold)'}}>{score.toLocaleString()}</div>
+              <div className="profile-stat-label">Total Score</div>
+            </div>
+            <div className="profile-stat">
+              <div className="profile-stat-val" style={{color:'var(--green)'}}>${(score/1000).toFixed(2)}</div>
+              <div className="profile-stat-label">USDT Earned</div>
+            </div>
+            <div className="profile-stat">
+              <div className="profile-stat-val">{totalWatched}</div>
+              <div className="profile-stat-label">Ads Watched</div>
+            </div>
+            <div className="profile-stat">
+              <div className="profile-stat-val">{user.withdrawals?.length || 0}</div>
+              <div className="profile-stat-label">Withdrawals</div>
+            </div>
           </div>
         </div>
+
         <div className="settings-section">
           <h3>Level Progress</h3>
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--text2)',marginBottom:6}}>
+          <div style={{display:'flex', justifyContent:'space-between', fontSize:12, color:'var(--text2)', marginBottom:6}}>
             <span>Level 4</span><span>Level 5 needs 10,000 pts</span>
           </div>
-          <div className="progress-bar-wrap" style={{height:8,marginBottom:8}}>
-            <div className="progress-bar-fill" style={{width:Math.min(100,(score/10000)*100)+'%'}}/>
+          <div className="progress-bar-wrap" style={{height:8, marginBottom:8}}>
+            <div className="progress-bar-fill" style={{width: Math.min(100, (score/10000)*100) + '%'}}/>
           </div>
-          <div style={{fontSize:12,color:'var(--text2)'}}>{Math.max(0,10000-score).toLocaleString()} more points to Level 5</div>
+          <div style={{fontSize:12, color:'var(--text2)'}}>{Math.max(0, 10000-score).toLocaleString()} more points to Level 5</div>
         </div>
+
+        <div className="settings-section">
+          <h3>Account</h3>
+          <div className="settings-row">
+            <div><div className="settings-row-label">Name</div><div className="settings-row-sub">{user.name}</div></div>
+          </div>
+          <div className="settings-row">
+            <div><div className="settings-row-label">Email</div><div className="settings-row-sub">{user.email}</div></div>
+          </div>
+          {firebaseReady && (
+            <div className="settings-row">
+              <div><div className="settings-row-label">Password</div><div className="settings-row-sub">Reset via email</div></div>
+              <button onClick={async()=>{try{await auth.sendPasswordResetEmail(user.email);alert('Password reset email sent!');}catch(e){alert(e.message);}}}
+                style={{background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:8, padding:'6px 12px', color:'var(--text2)', fontSize:12, cursor:'pointer'}}>
+                Reset
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="settings-section">
           <h3>Preferences</h3>
           <div className="settings-row">
@@ -689,17 +967,20 @@ function ProfilePage({user,score,ads}){
             <div className={`toggle ${twofa?'on':''}`} onClick={()=>setTwofa(v=>!v)}/>
           </div>
         </div>
+
         <div className="settings-section">
           <h3>USDT Wallet</h3>
-          <div style={{background:'var(--bg3)',border:'1px dashed var(--border2)',borderRadius:10,padding:'13px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{background:'var(--bg3)', border:'1px dashed var(--border2)', borderRadius:10, padding:'13px 14px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
             <div>
-              <div style={{fontSize:12,color:'var(--text2)',marginBottom:2}}>TRC-20 Wallet</div>
-              <div style={{fontSize:14,fontWeight:600}}>Not connected</div>
+              <div style={{fontSize:12, color:'var(--text2)', marginBottom:2}}>TRC-20 Wallet</div>
+              <div style={{fontSize:14, fontWeight:600}}>Not connected</div>
             </div>
-            <button style={{background:'var(--green)',color:'#fff',border:'none',borderRadius:8,padding:'8px 14px',fontSize:13,fontWeight:600,cursor:'pointer'}}>Connect</button>
+            <button style={{background:'var(--green)', color:'#fff', border:'none', borderRadius:8, padding:'8px 14px', fontSize:13, fontWeight:600, cursor:'pointer'}}>Connect</button>
           </div>
         </div>
-        <button onClick={()=>location.reload()} style={{width:'100%',background:'var(--bg3)',border:'1px solid var(--border2)',borderRadius:10,padding:12,color:'var(--red)',fontSize:14,fontWeight:600,cursor:'pointer',marginTop:4}}>
+
+        <button onClick={onSignOut}
+          style={{width:'100%', background:'var(--bg3)', border:'1px solid var(--red)', borderRadius:10, padding:13, color:'var(--red)', fontSize:14, fontWeight:600, cursor:'pointer'}}>
           Sign Out
         </button>
       </div>
@@ -707,41 +988,144 @@ function ProfilePage({user,score,ads}){
   );
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
-const NAV=[
-  {id:'dashboard',label:'Home',icon:'🏠'},
-  {id:'earn',label:'Earn',icon:'▶️'},
-  {id:'leaderboard',label:'Ranks',icon:'🏆'},
-  {id:'withdraw',label:'Withdraw',icon:'💸'},
-  {id:'profile',label:'Profile',icon:'👤'},
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+const NAV = [
+  {id:'dashboard',    label:'Home',     icon:'🏠'},
+  {id:'earn',         label:'Earn',     icon:'▶️'},
+  {id:'leaderboard',  label:'Ranks',    icon:'🏆'},
+  {id:'withdraw',     label:'Withdraw', icon:'💸'},
+  {id:'profile',      label:'Profile',  icon:'👤'},
 ];
 
-function App(){
-  const [user,setUser]=useState(null);
-  const [page,setPage]=useState('dashboard');
-  const [ads,setAds]=useState(MOCK_ADS);
-  const [watchingAd,setWatchingAd]=useState(null);
-  const [toast,setToast]=useState(null);
-  const [score,setScore]=useState(8750);
+function App() {
+  const [loading, setLoading]     = useState(true);
+  const [user,    setUser]        = useState(null);
+  const [page,    setPage]        = useState('dashboard');
+  const [score,   setScore]       = useState(0);
+  const [ads,     setAds]         = useState(ALL_ADS.map(a => ({...a, watched:false})));
+  const [watching, setWatching]   = useState(null);
+  const [toast,    setToast]      = useState(null);
+  const [saving,   setSaving]     = useState(false);
 
-  function showToast(msg,icon='✅'){
-    setToast({msg,icon});
-    setTimeout(()=>setToast(null),3000);
+  // ── Auth state listener (Firebase) ──
+  useEffect(() => {
+    if (!firebaseReady) { setLoading(false); return; }
+    const unsub = auth.onAuthStateChanged(async fbUser => {
+      if (fbUser) {
+        try {
+          const snap = await db.collection('users').doc(fbUser.uid).get();
+          const data = snap.data() || {};
+          const u = {
+            uid:         fbUser.uid,
+            name:        data.name || fbUser.displayName || fbUser.email.split('@')[0],
+            email:       fbUser.email,
+            score:       data.score || 0,
+            adsWatched:  data.adsWatched  || [],
+            withdrawals: data.withdrawals || [],
+          };
+          setUser(u);
+          setScore(data.score || 0);
+          // Mark already-watched ads
+          if (data.adsWatched?.length) {
+            setAds(prev => prev.map(a => ({...a, watched: data.adsWatched.includes(a.id)})));
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  function showToast(msg, icon='✅') {
+    setToast({msg, icon});
+    setTimeout(() => setToast(null), 3000);
   }
 
-  function handleAdComplete(ad){
-    setAds(prev=>prev.map(a=>a.id===ad.id?{...a,watched:true}:a));
-    setScore(s=>s+ad.reward);
-    setWatchingAd(null);
-    showToast(`+${ad.reward} points earned!`,'🎉');
+  // ── Save to Firestore ──
+  async function saveToFirestore(uid, updates) {
+    if (!firebaseReady) return;
+    setSaving(true);
+    try { await db.collection('users').doc(uid).update(updates); }
+    catch(e) { console.error('Firestore save error:', e); }
+    setSaving(false);
   }
 
-  if(!user) return <AuthPage onLogin={u=>setUser(u)}/>;
+  // ── Ad complete ──
+  function handleAdComplete(ad) {
+    const newScore      = score + ad.reward;
+    const newWatched    = [...(user.adsWatched || []), ad.id];
+    const updatedUser   = {...user, score: newScore, adsWatched: newWatched};
 
-  const unwatched=ads.filter(a=>!a.watched).length;
+    setScore(newScore);
+    setAds(prev => prev.map(a => a.id === ad.id ? {...a, watched:true} : a));
+    setUser(updatedUser);
+    setWatching(null);
+    showToast(`+${ad.reward} points earned! 💰`, '🎉');
 
-  return(
+    // Save to Firestore
+    if (firebaseReady && user.uid) {
+      saveToFirestore(user.uid, {
+        score: newScore,
+        adsWatched: newWatched,
+      });
+    } else {
+      // Update localStorage fallback
+      try {
+        const users = JSON.parse(localStorage.getItem('ae_users') || '[]');
+        const updated = users.map(u => u.email === user.email ? {...u, score:newScore, adsWatched:newWatched} : u);
+        localStorage.setItem('ae_users', JSON.stringify(updated));
+      } catch(e) {}
+    }
+  }
+
+  // ── Withdrawal ──
+  function handleWithdrawal(record) {
+    const newWithdrawals = [...(user.withdrawals || []), record];
+    const updatedUser    = {...user, withdrawals: newWithdrawals};
+    setUser(updatedUser);
+
+    if (firebaseReady && user.uid) {
+      saveToFirestore(user.uid, {withdrawals: newWithdrawals});
+    } else {
+      try {
+        const users = JSON.parse(localStorage.getItem('ae_users') || '[]');
+        const updated = users.map(u => u.email === user.email ? {...u, withdrawals:newWithdrawals} : u);
+        localStorage.setItem('ae_users', JSON.stringify(updated));
+      } catch(e) {}
+    }
+  }
+
+  // ── Sign out ──
+  async function handleSignOut() {
+    if (firebaseReady) await auth.signOut();
+    setUser(null);
+    setScore(0);
+    setAds(ALL_ADS.map(a => ({...a, watched:false})));
+    setPage('dashboard');
+  }
+
+  // ── Login callback ──
+  function handleLogin(u) {
+    setUser(u);
+    setScore(u.score || 0);
+    if (u.adsWatched?.length) {
+      setAds(prev => prev.map(a => ({...a, watched: u.adsWatched.includes(a.id)})));
+    }
+  }
+
+  if (loading) return <Splash text="Loading your account…"/>;
+  if (!user)   return <AuthPage onLogin={handleLogin}/>;
+
+  const unwatched = ads.filter(a => !a.watched).length;
+  const navLabel  = n => n.id==='earn' ? 'Watch & Earn' : n.id==='leaderboard' ? 'Leaderboard' : n.label;
+
+  return (
     <div className="app-layout">
+      {/* Desktop Sidebar */}
       <div className="sidebar">
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">A</div>
@@ -749,49 +1133,52 @@ function App(){
         </div>
         <div className="sidebar-nav">
           <div className="nav-section-label">Menu</div>
-          {NAV.map(n=>(
-            <button key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}>
+          {NAV.map(n => (
+            <button key={n.id} className={`nav-item ${page===n.id?'active':''}`} onClick={() => setPage(n.id)}>
               <span className="nav-item-icon">{n.icon}</span>
-              {n.id==='earn'?'Watch & Earn':n.id==='leaderboard'?'Leaderboard':n.label}
-              {n.id==='earn'&&unwatched>0&&<span className="nav-badge">{unwatched}</span>}
+              {navLabel(n)}
+              {n.id==='earn' && unwatched > 0 && <span className="nav-badge">{unwatched}</span>}
             </button>
           ))}
         </div>
         <div className="sidebar-user">
           <div className="sidebar-avatar">{user.name.slice(0,2).toUpperCase()}</div>
           <div className="sidebar-user-info">
-            <div className="sidebar-username">{user.name}</div>
+            <div className="sidebar-username">{user.name}{saving && <span className="saving-dot"/>}</div>
             <div className="sidebar-userlevel">⭐ {score.toLocaleString()} pts</div>
           </div>
-          <button className="sidebar-logout" onClick={()=>location.reload()} title="Logout">⏻</button>
+          <button className="sidebar-logout" onClick={handleSignOut} title="Sign Out">⏻</button>
         </div>
       </div>
 
+      {/* Main content */}
       <div className="main-content">
         <div className="topbar">
-          <div className="topbar-title">{NAV.find(n=>n.id===page)?.label}</div>
+          <div className="topbar-title">{navLabel(NAV.find(n => n.id === page) || NAV[0])}</div>
           <div className="topbar-right">
             <div className="topbar-balance">
               <span style={{color:'var(--green)'}}>💵</span>
-              <span style={{color:'var(--green)',fontWeight:700}}>${(score/1000).toFixed(3)}</span>
+              <span style={{color:'var(--green)', fontWeight:700}}>${(score/1000).toFixed(3)}</span>
             </div>
             <div className="topbar-notif">🔔<span className="notif-dot"/></div>
           </div>
         </div>
+
         <div className="page-scroll">
-          {page==='dashboard'&&<Dashboard user={user} ads={ads} score={score} onWatchAd={setWatchingAd}/>}
-          {page==='earn'&&<EarnPage ads={ads} onWatchAd={setWatchingAd}/>}
-          {page==='leaderboard'&&<LeaderboardPage/>}
-          {page==='withdraw'&&<WithdrawPage score={score} showToast={showToast}/>}
-          {page==='profile'&&<ProfilePage user={user} score={score} ads={ads}/>}
+          {page==='dashboard'   && <Dashboard   user={user} ads={ads} score={score} onWatchAd={setWatching}/>}
+          {page==='earn'        && <EarnPage     ads={ads} onWatchAd={setWatching}/>}
+          {page==='leaderboard' && <LeaderboardPage/>}
+          {page==='withdraw'    && <WithdrawPage user={user} score={score} showToast={showToast} onWithdrawal={handleWithdrawal}/>}
+          {page==='profile'     && <ProfilePage  user={user} score={score} ads={ads} onSignOut={handleSignOut}/>}
         </div>
       </div>
 
+      {/* Mobile Bottom Nav */}
       <div className="bottom-nav">
         <div className="bottom-nav-inner">
-          {NAV.map(n=>(
-            <button key={n.id} className={`bn-item ${page===n.id?'active':''}`} onClick={()=>setPage(n.id)}>
-              {n.id==='earn'&&unwatched>0&&<span className="bn-badge">{unwatched}</span>}
+          {NAV.map(n => (
+            <button key={n.id} className={`bn-item ${page===n.id?'active':''}`} onClick={() => setPage(n.id)}>
+              {n.id==='earn' && unwatched > 0 && <span className="bn-badge">{unwatched}</span>}
               <span className="bn-item-icon">{n.icon}</span>
               <span className="bn-item-label">{n.label}</span>
             </button>
@@ -799,8 +1186,8 @@ function App(){
         </div>
       </div>
 
-      {watchingAd&&<AdModal ad={watchingAd} onClose={()=>setWatchingAd(null)} onComplete={handleAdComplete}/>}
-      {toast&&<Toast msg={toast.msg} icon={toast.icon}/>}
+      {watching && <AdModal ad={watching} onClose={() => setWatching(null)} onComplete={handleAdComplete}/>}
+      {toast    && <Toast msg={toast.msg} icon={toast.icon}/>}
     </div>
   );
 }
