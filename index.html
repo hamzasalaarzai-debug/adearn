@@ -24,9 +24,10 @@ const FIREBASE_CONFIG = {
 const CONFIG = {
 
   SITE_NAME: "AdEarn",                  // ← Your site name
+  ADMIN_EMAIL: "hamzasalarzai786@gmail.com", // ← YOUR email — only this account sees Admin panel
 
   POINTS_PER_USDT: 1000,               // ← 1000 pts = $1 USDT
-  MIN_WITHDRAWAL_USDT: 20.00,           // ← Minimum withdrawal amount
+  MIN_WITHDRAWAL_USDT: 1.00,           // ← Minimum withdrawal amount
   REFERRALS_TO_UNLOCK_WITHDRAW: 10,    // ← Referrals needed before first withdrawal
   DAILY_AD_GOAL: 6,                    // ← How many ads per day goal
   BONUS_ON_GOAL: 100,                  // ← Bonus points when daily goal reached
@@ -299,6 +300,39 @@ input,select{font-family:'DM Sans',sans-serif}
 .saving-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-left:6px;animation:pulse 1.5s infinite}
 .empty{text-align:center;padding:36px 0;color:var(--text3)}
 .empty-icon{font-size:32px;margin-bottom:8px}
+
+/* ADMIN PANEL */
+.admin-wrap{min-height:100vh;background:var(--bg);padding:20px}
+.admin-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.admin-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800}
+.admin-title span{color:var(--red)}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.admin-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.admin-stat-lbl{font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:500}
+.admin-stat-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800}
+.admin-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.admin-tab{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.admin-tab.active{background:var(--red);border-color:var(--red);color:#fff}
+.admin-table{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.admin-table-hdr{padding:12px 18px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:grid}
+.admin-table-row{padding:13px 18px;border-bottom:1px solid var(--border);align-items:center;display:grid;font-size:13px;transition:background .15s}
+.admin-table-row:last-child{border-bottom:none}
+.admin-table-row:hover{background:var(--bg3)}
+.admin-users-hdr{grid-template-columns:1fr 140px 80px 80px 80px 100px}
+.admin-users-row{grid-template-columns:1fr 140px 80px 80px 80px 100px}
+.admin-wd-hdr{grid-template-columns:1fr 120px 80px 80px 100px 110px}
+.admin-wd-row{grid-template-columns:1fr 120px 80px 80px 100px 110px}
+.admin-btn{border:none;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.admin-btn-green{background:#00d08420;color:var(--green);border:1px solid var(--green)}
+.admin-btn-green:hover{background:var(--green);color:#fff}
+.admin-btn-red{background:#ff4d6a20;color:var(--red);border:1px solid var(--red)}
+.admin-btn-red:hover{background:var(--red);color:#fff}
+.admin-btn-blue{background:#4f8ef720;color:var(--blue);border:1px solid var(--blue)}
+.admin-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-block}
+.admin-search{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;width:100%;max-width:300px;transition:border-color .2s;margin-bottom:16px}
+.admin-search:focus{border-color:var(--red)}
+.admin-search::placeholder{color:var(--text3)}
+.admin-locked{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);gap:12px;text-align:center;padding:20px}
 
 /* RESPONSIVE */
 @media(max-width:768px){
@@ -996,6 +1030,247 @@ function ProfilePage({user,score,onSignOut}){
   );
 }
 
+// ── ADMIN PANEL ────────────────────────────────────────────────────────────
+function AdminPanel({currentUser,onBack}){
+  const [tab,setTab]=useState('overview');
+  const [users,setUsers]=useState([]);
+  const [withdrawals,setWithdrawals]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [search,setSearch]=useState('');
+  const [toast,setToast]=useState(null);
+
+  function showToast(msg,icon='✅'){setToast({msg,icon});setTimeout(()=>setToast(null),3000);}
+
+  useEffect(()=>{
+    if(!fbReady)return;
+    setLoading(true);
+    // Load all users from Firestore
+    db.collection('users').get().then(snap=>{
+      const list=[];
+      const wdList=[];
+      snap.forEach(doc=>{
+        const d={id:doc.id,...doc.data()};
+        list.push(d);
+        // Collect all withdrawals with user info
+        if(d.withdrawals&&d.withdrawals.length>0){
+          d.withdrawals.forEach((w,i)=>{
+            wdList.push({...w,userName:d.name,userEmail:d.email,userId:doc.id,wIndex:i});
+          });
+        }
+      });
+      list.sort((a,b)=>(b.score||0)-(a.score||0));
+      wdList.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      setUsers(list);
+      setWithdrawals(wdList);
+      setLoading(false);
+    }).catch(e=>{console.error(e);setLoading(false);});
+  },[]);
+
+  // Stats
+  const totalUsers=users.length;
+  const totalScore=users.reduce((s,u)=>s+(u.score||0),0);
+  const totalUSDT=(totalScore/CONFIG.POINTS_PER_USDT).toFixed(2);
+  const pendingWDs=withdrawals.filter(w=>w.status==='pending');
+  const totalPaid=withdrawals.filter(w=>w.status==='paid').reduce((s,w)=>s+parseFloat(w.amount||0),0).toFixed(2);
+
+  // Mark withdrawal as paid
+  async function markPaid(wd){
+    try{
+      const snap=await db.collection('users').doc(wd.userId).get();
+      const wds=[...(snap.data().withdrawals||[])];
+      wds[wd.wIndex]={...wds[wd.wIndex],status:'paid'};
+      await db.collection('users').doc(wd.userId).update({withdrawals:wds});
+      setWithdrawals(prev=>prev.map(w=>
+        w.userId===wd.userId&&w.wIndex===wd.wIndex?{...w,status:'paid'}:w
+      ));
+      showToast(`Marked $${wd.amount} as paid ✅`,'✅');
+    }catch(e){showToast('Error: '+e.message,'❌');}
+  }
+
+  // Mark withdrawal as failed
+  async function markFailed(wd){
+    try{
+      const snap=await db.collection('users').doc(wd.userId).get();
+      const wds=[...(snap.data().withdrawals||[])];
+      wds[wd.wIndex]={...wds[wd.wIndex],status:'failed'};
+      await db.collection('users').doc(wd.userId).update({withdrawals:wds});
+      setWithdrawals(prev=>prev.map(w=>
+        w.userId===wd.userId&&w.wIndex===wd.wIndex?{...w,status:'failed'}:w
+      ));
+      showToast(`Marked as failed`,'⚠️');
+    }catch(e){showToast('Error: '+e.message,'❌');}
+  }
+
+  // Ban/unban user (set score to 0 and flag)
+  async function toggleBan(u){
+    try{
+      const banned=!u.banned;
+      await db.collection('users').doc(u.id).update({banned});
+      setUsers(prev=>prev.map(x=>x.id===u.id?{...x,banned}:x));
+      showToast(banned?`${u.name} banned`:`${u.name} unbanned`,banned?'🚫':'✅');
+    }catch(e){showToast('Error: '+e.message,'❌');}
+  }
+
+  // Unlock withdrawal for a user manually
+  async function unlockWithdraw(u){
+    try{
+      await db.collection('users').doc(u.id).update({referralUnlocked:true});
+      setUsers(prev=>prev.map(x=>x.id===u.id?{...x,referralUnlocked:true}:x));
+      showToast(`Withdrawal unlocked for ${u.name}`,'🔓');
+    }catch(e){showToast('Error: '+e.message,'❌');}
+  }
+
+  const filteredUsers=users.filter(u=>
+    u.name?.toLowerCase().includes(search.toLowerCase())||
+    u.email?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filteredWDs=withdrawals.filter(w=>
+    tab==='pending'?w.status==='pending':true
+  ).filter(w=>
+    w.userName?.toLowerCase().includes(search.toLowerCase())||
+    w.userEmail?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if(loading) return <Splash text="Loading admin data…"/>;
+
+  return(
+    <div className="admin-wrap">
+      {toast&&<Toast msg={toast.msg} icon={toast.icon}/>}
+      <div className="admin-topbar">
+        <div>
+          <div className="admin-title">⚙️ Admin <span>Panel</span></div>
+          <div style={{fontSize:13,color:'var(--text2)',marginTop:2}}>Manage users, withdrawals and platform data</div>
+        </div>
+        <button onClick={onBack} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:10,padding:'9px 18px',color:'var(--text2)',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+          ← Back to Site
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="admin-stats">
+        <div className="admin-stat">
+          <div className="admin-stat-lbl">👥 Total Users</div>
+          <div className="admin-stat-val" style={{color:'var(--blue)'}}>{totalUsers}</div>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-lbl">⭐ Total Score</div>
+          <div className="admin-stat-val" style={{color:'var(--gold)'}}>{totalScore.toLocaleString()}</div>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-lbl">⏳ Pending WDs</div>
+          <div className="admin-stat-val" style={{color:'var(--red)'}}>{pendingWDs.length}</div>
+        </div>
+        <div className="admin-stat">
+          <div className="admin-stat-lbl">💸 Total Paid</div>
+          <div className="admin-stat-val" style={{color:'var(--green)'}}>${totalPaid}</div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="admin-tabs">
+        {[
+          {id:'overview',label:'👥 All Users'},
+          {id:'pending',label:`⏳ Pending (${pendingWDs.length})`},
+          {id:'withdrawals',label:'💸 All Withdrawals'},
+        ].map(t=>(
+          <button key={t.id} className={`admin-tab ${tab===t.id?'active':''}`} onClick={()=>{setTab(t.id);setSearch('');}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <input className="admin-search" placeholder="🔍 Search by name or email…" value={search} onChange={e=>setSearch(e.target.value)}/>
+
+      {/* USERS TABLE */}
+      {tab==='overview'&&(
+        <div className="admin-table">
+          <div className="admin-table-hdr admin-users-hdr">
+            <div>User</div><div>Email</div><div>Score</div><div>Refs</div><div>Status</div><div>Actions</div>
+          </div>
+          {filteredUsers.length===0&&<div style={{padding:20,textAlign:'center',color:'var(--text3)',fontSize:13}}>No users found</div>}
+          {filteredUsers.map(u=>(
+            <div className="admin-table-row admin-users-row" key={u.id}>
+              <div>
+                <div style={{fontWeight:600,fontSize:13}}>{u.name}</div>
+                <div style={{fontSize:11,color:'var(--text3)'}}>{u.id.slice(0,10)}…</div>
+              </div>
+              <div style={{fontSize:12,color:'var(--text2)'}}>{u.email}</div>
+              <div style={{fontFamily:'Syne',fontWeight:700,color:'var(--gold)'}}>{(u.score||0).toLocaleString()}</div>
+              <div style={{textAlign:'center'}}>{u.referralCount||0}</div>
+              <div>
+                {u.banned
+                  ?<span className="admin-badge" style={{background:'#ff4d6a20',color:'var(--red)'}}>Banned</span>
+                  :u.referralUnlocked
+                    ?<span className="admin-badge" style={{background:'#00d08420',color:'var(--green)'}}>Unlocked</span>
+                    :<span className="admin-badge" style={{background:'#f5c84220',color:'var(--gold)'}}>Locked</span>}
+              </div>
+              <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                {!u.referralUnlocked&&!u.banned&&(
+                  <button className="admin-btn admin-btn-green" onClick={()=>unlockWithdraw(u)}>🔓 Unlock</button>
+                )}
+                <button className={`admin-btn ${u.banned?'admin-btn-green':'admin-btn-red'}`} onClick={()=>toggleBan(u)}>
+                  {u.banned?'✅ Unban':'🚫 Ban'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* WITHDRAWALS TABLE */}
+      {(tab==='withdrawals'||tab==='pending')&&(
+        <div className="admin-table">
+          <div className="admin-table-hdr admin-wd-hdr">
+            <div>User</div><div>Date</div><div>Score</div><div>Amount</div><div>Status</div><div>Actions</div>
+          </div>
+          {filteredWDs.length===0&&<div style={{padding:20,textAlign:'center',color:'var(--text3)',fontSize:13}}>
+            {tab==='pending'?'No pending withdrawals 🎉':'No withdrawals yet'}
+          </div>}
+          {filteredWDs.map((w,i)=>(
+            <div className="admin-table-row admin-wd-row" key={i}>
+              <div>
+                <div style={{fontWeight:600,fontSize:13}}>{w.userName}</div>
+                <div style={{fontSize:11,color:'var(--text3)'}}>{w.userEmail}</div>
+              </div>
+              <div style={{fontSize:12,color:'var(--text2)'}}>{w.date}</div>
+              <div style={{fontSize:12}}>{w.score?.toLocaleString()}</div>
+              <div style={{fontFamily:'Syne',fontWeight:800,color:'var(--green)'}}>${w.amount}</div>
+              <div>
+                <span className={`admin-badge ${
+                  w.status==='paid'?'badge-paid':w.status==='failed'?'badge-failed':'badge-pending'
+                }`} style={{
+                  background:w.status==='paid'?'#00d08420':w.status==='failed'?'#ff4d6a20':'#f5c84220',
+                  color:w.status==='paid'?'var(--green)':w.status==='failed'?'var(--red)':'var(--gold)'
+                }}>
+                  {w.status.charAt(0).toUpperCase()+w.status.slice(1)}
+                </span>
+              </div>
+              <div style={{display:'flex',gap:5}}>
+                {w.status==='pending'&&<>
+                  <button className="admin-btn admin-btn-green" onClick={()=>markPaid(w)}>✅ Paid</button>
+                  <button className="admin-btn admin-btn-red" onClick={()=>markFailed(w)}>❌ Fail</button>
+                </>}
+                {w.status!=='pending'&&<span style={{fontSize:12,color:'var(--text3)'}}>Done</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick info */}
+      <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:18,fontSize:13,color:'var(--text2)',lineHeight:2}}>
+        <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,color:'var(--text)',marginBottom:8}}>📋 Quick Guide</div>
+        <div>✅ <strong style={{color:'var(--text)'}}>Paid</strong> — User sent money, mark after you send USDT to their wallet</div>
+        <div>❌ <strong style={{color:'var(--text)'}}>Fail</strong> — Wrong address or rejected, user will see failed status</div>
+        <div>🔓 <strong style={{color:'var(--text)'}}>Unlock</strong> — Manually unlock withdrawal for a user without 10 referrals</div>
+        <div>🚫 <strong style={{color:'var(--text)'}}>Ban</strong> — Disable a suspicious or fraudulent account</div>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN APP ───────────────────────────────────────────────────────────────
 const NAV=[
   {id:'dashboard',  label:'Home',     icon:'🏠'},
@@ -1009,6 +1284,7 @@ function App(){
   const [loading,setLoading]=useState(true);
   const [user,setUser]=useState(null);
   const [page,setPage]=useState('dashboard');
+  const [adminMode,setAdminMode]=useState(false);
   const [score,setScore]=useState(0);
   const [watchedByDate,setWatchedByDate]=useState({});
   const [watching,setWatching]=useState(null);
@@ -1022,8 +1298,20 @@ function App(){
         try{
           const snap=await db.collection('users').doc(fbUser.uid).get();
           const d=snap.data()||{};
+          // Auto-generate refCode if missing (existing accounts)
+          let refCode=d.refCode||'';
+          if(!refCode){
+            refCode='AE'+fbUser.uid.slice(0,6).toUpperCase();
+            // Save it back to Firestore
+            await db.collection('users').doc(fbUser.uid).set(
+              {refCode},
+              {merge:true}
+            );
+            // Save lookup
+            await db.collection('refCodes').doc(refCode).set({uid:fbUser.uid});
+          }
           setUser({uid:fbUser.uid,name:d.name||fbUser.displayName||fbUser.email.split('@')[0],email:fbUser.email,
-            score:d.score||0,refCode:d.refCode||'',
+            score:d.score||0,refCode,
             referralCount:d.referralCount||0,referralUnlocked:d.referralUnlocked||false,
             watchedByDate:d.watchedByDate||{},withdrawals:d.withdrawals||[]});
           setScore(d.score||0);
@@ -1089,8 +1377,9 @@ function App(){
 
   if(loading)return <Splash text="Loading your account…"/>;
   if(!user)return <AuthPage onLogin={handleLogin}/>;
+  if(adminMode)return <AdminPanel currentUser={user} onBack={()=>setAdminMode(false)}/>;
 
-  const unwatched=visibleAds.filter(a=>!a.watched).length;
+  const isAdmin=user.email===CONFIG.ADMIN_EMAIL;
   const navLabel=n=>n.id==='earn'?'Watch & Earn':n.id==='leaderboard'?'Leaderboard':n.label;
 
   return(
@@ -1110,6 +1399,12 @@ function App(){
               {n.id==='withdraw'&&!user.referralUnlocked&&<span className="nav-badge">🔒</span>}
             </button>
           ))}
+          {isAdmin&&(
+            <button className="nav-item" onClick={()=>setAdminMode(true)}
+              style={{marginTop:8,background:'#ff4d6a15',color:'var(--red)',border:'1px solid #ff4d6a30'}}>
+              <span className="nav-icon">⚙️</span>Admin Panel
+            </button>
+          )}
         </div>
         <div className="sidebar-user">
           <div className="s-avatar">{user.name.slice(0,2).toUpperCase()}</div>
@@ -1125,6 +1420,12 @@ function App(){
         <div className="topbar">
           <div className="topbar-title">{navLabel(NAV.find(n=>n.id===page)||NAV[0])}</div>
           <div className="topbar-right">
+            {isAdmin&&(
+              <button onClick={()=>setAdminMode(true)}
+                style={{background:'#ff4d6a20',border:'1px solid #ff4d6a40',borderRadius:10,padding:'7px 12px',color:'var(--red)',fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                ⚙️ Admin
+              </button>
+            )}
             <div className="topbar-balance">
               <span style={{color:'var(--green)'}}>💵</span>
               <span style={{color:'var(--green)',fontWeight:700}}>${(score/CONFIG.POINTS_PER_USDT).toFixed(3)}</span>
