@@ -1380,6 +1380,7 @@ function App(){
   if(adminMode)return <AdminPanel currentUser={user} onBack={()=>setAdminMode(false)}/>;
 
   const isAdmin=user.email===CONFIG.ADMIN_EMAIL;
+  const unwatched=visibleAds.filter(a=>!a.watched).length;
   const navLabel=n=>n.id==='earn'?'Watch & Earn':n.id==='leaderboard'?'Leaderboard':n.label;
 
   return(
