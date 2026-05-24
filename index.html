@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>AdEarn — Watch Ads, Earn USDT</title>
+<title>AdEarn — Watch Ads, Earn Rupees</title>
 
 <!-- ════════════════════════════════════════════════════════════════
-  🔥 FIREBASE CONFIG — Paste your Firebase values here
+  🔥 FIREBASE CONFIG
 ════════════════════════════════════════════════════════════════ -->
 <script>
 const FIREBASE_CONFIG = {
@@ -23,15 +23,22 @@ const FIREBASE_CONFIG = {
    ════════════════════════════════════════════════════════════════ */
 const CONFIG = {
 
-  SITE_NAME: "AdEarn",                  // ← Your site name
-  ADMIN_EMAIL: "hamzasalarzai786@gmail.com", // ← YOUR email — only this account sees Admin panel
+  SITE_NAME: "AdEarn",                       // ← Your site name
+  ADMIN_EMAIL: "hamzasalarzai786@gmail.com", // ← YOUR email — only this sees Admin panel
 
-  POINTS_PER_USDT: 1000,               // ← 1000 pts = $1 USDT
-  MIN_WITHDRAWAL_USDT: 1.00,           // ← Minimum withdrawal amount
-  REFERRALS_TO_UNLOCK_WITHDRAW: 10,    // ← Referrals needed before first withdrawal
-  DAILY_AD_GOAL: 6,                    // ← How many ads per day goal
-  BONUS_ON_GOAL: 100,                  // ← Bonus points when daily goal reached
-  REFERRAL_BONUS_PTS: 200,             // ← Points both users get on referral
+  // ── CURRENCY SETTINGS (PKR) ───────────────────────────────────
+  CURRENCY:          "Rs.",                  // ← Currency symbol shown to users
+  CURRENCY_NAME:     "Rupees",              // ← Currency full name
+  POINTS_PER_PKR:    10,                    // ← 10 points = Rs. 1
+  MIN_WITHDRAWAL:    2000,                   // ← Minimum withdrawal in Rupees (Rs. 2000)
+  REFERRALS_TO_UNLOCK_WITHDRAW: 10,         // ← Referrals needed before first withdrawal
+  DAILY_AD_GOAL:     6,                     // ← How many ads per day goal
+  BONUS_ON_GOAL:     100,                   // ← Bonus points when daily goal reached
+  REFERRAL_BONUS_PTS:200,                   // ← Points both users get on referral
+
+  // ── CPALEAD OFFERWALL ─────────────────────────────────────────
+  CPALEAD_PUB_ID:    "3348912",             // ← Your CPALead Publisher ID
+  CPALEAD_WALL_URL:  "https://www.lnksforyou.com/wall/yK8pl1R", // ← Your Offerwall URL
 
   // ── ADS LIST ─────────────────────────────────────────────────
   // To add a new ad: copy one block, change the values, done!
@@ -491,8 +498,8 @@ function AuthPage({onLogin}){
           {mode==='login'?'Welcome Back':mode==='register'?'Create Account':'Reset Password'}
         </h2>
         <p className="auth-sub">
-          {mode==='login'?'Sign in to start earning USDT'
-          :mode==='register'?'Join and earn USDT watching ads'
+          {mode==='login'?'Sign in to start earning Rupees'
+          :mode==='register'?'Join and earn Rupees watching ads'
           :'Enter your email to receive a reset link'}
         </p>
         <form onSubmit={submit}>
@@ -583,7 +590,7 @@ function AdModal({ad,onClose,onComplete}){
             <div className="modal-reward">+{ad.reward}</div>
             <div style={{fontSize:13,color:'var(--text2)',textAlign:'center',marginBottom:4}}>points earned</div>
             <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 16px',marginBottom:18,fontSize:13,color:'var(--text2)'}}>
-              ≈ ${(ad.reward/CONFIG.POINTS_PER_USDT).toFixed(4)} USDT
+              {`≈ Rs. ${(ad.reward/CONFIG.POINTS_PER_PKR).toFixed(1)} Rupees equivalent`}
             </div>
             <button className="btn-modal" onClick={()=>onComplete(ad)}>Claim & Next Ad →</button>
           </div>
@@ -603,7 +610,7 @@ function Dashboard({user,todayWatched,score,onWatchAd,visibleAds}){
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
           <div>
             <h1 className="page-title">Hello, <span>{user.name.split(' ')[0]}</span> 👋</h1>
-            <p className="page-sub">Watch ads · Earn USDT · Refer friends</p>
+            <p className="page-sub">Watch ads · Earn Rupees · Refer friends</p>
           </div>
           <span className={`chip ${user.referralUnlocked?'chip-green':'chip-gold'}`}>
             {user.referralUnlocked?'✅ Withdrawal Unlocked':'🔒 '+user.referralCount+'/'+CONFIG.REFERRALS_TO_UNLOCK_WITHDRAW+' Referrals'}
@@ -618,9 +625,9 @@ function Dashboard({user,todayWatched,score,onWatchAd,visibleAds}){
             <div className="stat-chg">↑ +{todayWatched.reduce((s,a)=>s+a.reward,0)} today</div>
           </div>
           <div className="stat-card">
-            <div className="stat-lbl">USDT Balance<div className="stat-icon si-green">💵</div></div>
-            <div className="stat-val" style={{color:'var(--green)',fontSize:20}}>${(score/CONFIG.POINTS_PER_USDT).toFixed(3)}</div>
-            <div className="stat-chg">{user.referralUnlocked?'Withdrawable':'Locked until 10 referrals'}</div>
+            <div className="stat-lbl">Balance<div className="stat-icon si-green">💵</div></div>
+            <div className="stat-val" style={{color:'var(--green)',fontSize:20}}>{`Rs. ${Math.floor(score/CONFIG.POINTS_PER_PKR)}`}</div>
+            <div className="stat-chg">{user.referralUnlocked?'Withdrawable':'Unlock via 10 referrals'}</div>
           </div>
           <div className="stat-card">
             <div className="stat-lbl">Ads Today<div className="stat-icon si-blue">📺</div></div>
@@ -630,7 +637,7 @@ function Dashboard({user,todayWatched,score,onWatchAd,visibleAds}){
           <div className="stat-card">
             <div className="stat-lbl">Referrals<div className="stat-icon si-purple">👥</div></div>
             <div className="stat-val">{user.referralCount}</div>
-            <div className="stat-chg">{Math.max(0,CONFIG.REFERRALS_TO_UNLOCK_WITHDRAW-user.referralCount)} more needed</div>
+            <div className="stat-chg">{CONFIG.REFERRALS_TO_UNLOCK_WITHDRAW-user.referralCount} more to unlock</div>
           </div>
         </div>
 
@@ -651,7 +658,7 @@ function Dashboard({user,todayWatched,score,onWatchAd,visibleAds}){
 
         <div className="sec-header">
           <div className="sec-title">Today's Ads</div>
-          <div style={{fontSize:12,color:'var(--text2)'}}>1 pt = ${(1/CONFIG.POINTS_PER_USDT).toFixed(3)}</div>
+          <div style={{fontSize:12,color:'var(--text2)'}}>10 pts = Rs.1</div>
         </div>
         <div className="ads-grid">
           {visibleAds.map(ad=>(
@@ -702,7 +709,7 @@ function Dashboard({user,todayWatched,score,onWatchAd,visibleAds}){
               <div className="ref-code">{user.refCode}</div>
             </div>
             <button className="btn-copy" onClick={()=>{
-              const text=`Join ${CONFIG.SITE_NAME} and earn USDT by watching ads! Use my referral code: ${user.refCode} — Sign up at adearn-xi.vercel.app`;
+              const text=`Join ${CONFIG.SITE_NAME} and earn Rupees by watching ads! Use my referral code: ${user.refCode} — Sign up at adearn-xi.vercel.app`;
               navigator.clipboard.writeText(text).catch(()=>{});
               alert('Referral message copied! Share it on WhatsApp 📲');
             }}>📋 Copy & Share</button>
@@ -776,15 +783,15 @@ function EarnPage({visibleAds,onWatchAd}){
 
 // ── LEADERBOARD ────────────────────────────────────────────────────────────
 const LB=[
-  {rank:1,name:"Ahmad K.",score:24500,usdt:24.50,av:"AK",col:"#f5c842"},
-  {rank:2,name:"Sara M.",score:18200,usdt:18.20,av:"SM",col:"#a855f7"},
-  {rank:3,name:"Bilal R.",score:15800,usdt:15.80,av:"BR",col:"#06b6d4"},
+  {rank:1,name:"Ahmad K.",score:24500,usdt:2450,av:"AK",col:"#f5c842"},
+  {rank:2,name:"Sara M.",score:18200,usdt:1820,av:"SM",col:"#a855f7"},
+  {rank:3,name:"Bilal R.",score:15800,usdt:1580,av:"BR",col:"#06b6d4"},
   {rank:4,name:"You",score:0,usdt:0,av:"",col:"#f5c842",isMe:true},
-  {rank:5,name:"Fatima Z.",score:9300,usdt:9.30,av:"FZ",col:"#00d084"},
-  {rank:6,name:"Usman T.",score:7100,usdt:7.10,av:"UT",col:"#4f8ef7"},
+  {rank:5,name:"Fatima Z.",score:9300,usdt:930,av:"FZ",col:"#00d084"},
+  {rank:6,name:"Usman T.",score:7100,usdt:710,av:"UT",col:"#4f8ef7"},
 ];
 function LeaderboardPage({score}){
-  const lb=LB.map(u=>u.isMe?{...u,score,usdt:+(score/CONFIG.POINTS_PER_USDT).toFixed(2)}:u)
+  const lb=LB.map(u=>u.isMe?{...u,score,usdt:+(score/CONFIG.POINTS_PER_PKR).toFixed(0)}:u)
             .sort((a,b)=>b.score-a.score).map((u,i)=>({...u,rank:i+1}));
   return(
     <div>
@@ -802,13 +809,13 @@ function LeaderboardPage({score}){
                 <div style={{width:40,height:40,borderRadius:'50%',background:`${col}25`,border:`2px solid ${col}`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:13,color:col,margin:'0 auto 8px',fontFamily:'Syne'}}>{u.av||'👤'}</div>
                 <div style={{fontSize:11,fontWeight:600,marginBottom:2}}>{u.name}</div>
                 <div style={{fontFamily:'Syne',fontWeight:800,fontSize:14,color:col}}>#{pos}</div>
-                <div style={{fontSize:11,color:'var(--green)',marginTop:2}}>${u.usdt.toFixed(2)}</div>
+                <div style={{fontSize:11,color:'var(--green)',marginTop:2}}>{`Rs. ${u.usdt}`}</div>
               </div>
             );
           })}
         </div>
         <div className="lb-card">
-          <div className="lb-hdr"><div>Rank</div><div>User</div><div>Score</div><div>USDT</div></div>
+          <div className="lb-hdr"><div>Rank</div><div>User</div><div>Score</div><div>Rs. Earned</div></div>
           {lb.map(u=>(
             <div className={`lb-row ${u.isMe?'me':''}`} key={u.rank}>
               <div className={`lb-rank ${u.rank===1?'rank-gold':u.rank===2?'rank-silver':u.rank===3?'rank-bronze':''}`}>#{u.rank}</div>
@@ -817,7 +824,7 @@ function LeaderboardPage({score}){
                 <div className="lb-name">{u.name}{u.isMe&&<span className="lb-you">YOU</span>}</div>
               </div>
               <div className="lb-score">{u.score.toLocaleString()}</div>
-              <div className="lb-usdt">${u.usdt.toFixed(2)}</div>
+              <div className="lb-usdt">{`Rs. ${u.usdt}`}</div>
             </div>
           ))}
         </div>
@@ -830,25 +837,25 @@ function LeaderboardPage({score}){
 function WithdrawPage({user,score,showToast,onWithdrawal}){
   const [wallet,setWallet]=useState('');
   const [amount,setAmount]=useState('');
-  const bal=(score/CONFIG.POINTS_PER_USDT).toFixed(3);
+  const bal=Math.floor(score/CONFIG.POINTS_PER_PKR);
   const unlocked=user.referralUnlocked;
   const needed=CONFIG.REFERRALS_TO_UNLOCK_WITHDRAW-user.referralCount;
 
   function submit(){
     if(!wallet.trim()){showToast('Enter your wallet address','⚠️');return;}
-    if(!amount||parseFloat(amount)<CONFIG.MIN_WITHDRAWAL_USDT){showToast(`Min withdrawal is $${CONFIG.MIN_WITHDRAWAL_USDT}`,'⚠️');return;}
+    if(!amount||parseFloat(amount)<CONFIG.MIN_WITHDRAWAL){showToast(`Min withdrawal is Rs.${CONFIG.MIN_WITHDRAWAL}`,'⚠️');return;}
     if(parseFloat(amount)>parseFloat(bal)){showToast('Insufficient balance','❌');return;}
-    const r={date:fmtDate(),amount:parseFloat(amount).toFixed(2),score:Math.round(parseFloat(amount)*CONFIG.POINTS_PER_USDT),status:'pending',ts:Date.now()};
+    const r={date:fmtDate(),amount:parseFloat(amount).toFixed(2),score:Math.round(parseFloat(amount)*CONFIG.POINTS_PER_PKR),status:'pending',ts:Date.now()};
     onWithdrawal(r);
-    showToast(`$${amount} USDT withdrawal submitted!`,'✅');
+    showToast(`Withdrawal of Rs.${amount} submitted!`,'✅');
     setWallet('');setAmount('');
   }
 
   return(
     <div>
       <div className="page-header">
-        <h1 className="page-title">Withdraw <span>USDT</span></h1>
-        <p className="page-sub">Min ${CONFIG.MIN_WITHDRAWAL_USDT} · TRC-20 Network</p>
+        <h1 className="page-title">Withdraw <span>Rupees</span></h1>
+        <p className="page-sub">Min Rs.200 · Easypaisa / JazzCash / Bank</p>
       </div>
       <div className="page-body">
         {/* Referral gate */}
@@ -880,20 +887,20 @@ function WithdrawPage({user,score,showToast,onWithdrawal}){
         {/* Withdrawal form */}
         <div className="w-card" style={{opacity:unlocked?1:.5,pointerEvents:unlocked?'auto':'none'}}>
           <div style={{fontSize:12,color:'var(--text2)',marginBottom:4}}>Available Balance</div>
-          <div className="w-bal">${bal}</div>
-          <div style={{fontSize:12,color:'var(--text2)',marginBottom:16}}>{score.toLocaleString()} pts · {CONFIG.POINTS_PER_USDT} pts = $1</div>
+          <div className="w-bal">Rs. {bal}</div>
+          <div style={{fontSize:12,color:'var(--text2)',marginBottom:16}}>{score.toLocaleString()} pts · {CONFIG.POINTS_PER_PKR} pts = Rs.1</div>
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
             <div>
-              <label className="w-lbl">USDT Wallet Address (TRC-20)</label>
-              <input className="w-input" placeholder="TYour...WalletAddress" value={wallet} onChange={e=>setWallet(e.target.value)}/>
+              <label className="w-lbl">Easypaisa/JazzCash Number or Bank Account</label>
+              <input className="w-input" placeholder="Your Easypaisa/JazzCash number or bank account" value={wallet} onChange={e=>setWallet(e.target.value)}/>
             </div>
             <div>
-              <label className="w-lbl">Amount (USDT)</label>
-              <input className="w-input" type="number" placeholder={CONFIG.MIN_WITHDRAWAL_USDT.toFixed(2)} min={CONFIG.MIN_WITHDRAWAL_USDT} step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/>
+              <label className="w-lbl">Amount in Rupees</label>
+              <input className="w-input" type="number" placeholder={CONFIG.MIN_WITHDRAWAL.toFixed(2)} min={CONFIG.MIN_WITHDRAWAL} step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
               <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 12px',fontSize:12,color:'var(--text2)'}}>
-                <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Minimum</div>${CONFIG.MIN_WITHDRAWAL_USDT} USDT
+                <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Minimum</div>${CONFIG.MIN_WITHDRAWAL} USDT
               </div>
               <div style={{background:'var(--bg3)',borderRadius:10,padding:'10px 12px',fontSize:12,color:'var(--text2)'}}>
                 <div style={{fontWeight:600,color:'var(--text)',marginBottom:2}}>Processing</div>1–24 hours
@@ -947,8 +954,8 @@ function ProfilePage({user,score,onSignOut}){
               <div className="prof-stat-lbl">Total Score</div>
             </div>
             <div style={{textAlign:'center'}}>
-              <div className="prof-stat-val" style={{color:'var(--green)'}}>${(score/CONFIG.POINTS_PER_USDT).toFixed(2)}</div>
-              <div className="prof-stat-lbl">USDT Earned</div>
+              <div className="prof-stat-val" style={{color:'var(--green)'}}>{`Rs. ${Math.floor(score/CONFIG.POINTS_PER_PKR)}`}</div>
+              <div className="prof-stat-lbl">Rupees Earned</div>
             </div>
             <div style={{textAlign:'center'}}>
               <div className="prof-stat-val">{user.referralCount}</div>
@@ -1015,7 +1022,7 @@ function ProfilePage({user,score,onSignOut}){
           <h3>USDT Wallet</h3>
           <div style={{background:'var(--bg3)',border:'1px dashed var(--border2)',borderRadius:10,padding:'13px 14px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <div>
-              <div style={{fontSize:12,color:'var(--text2)',marginBottom:2}}>TRC-20 Wallet</div>
+              <div style={{fontSize:12,color:'var(--text2)',marginBottom:2}}>Payment Account</div>
               <div style={{fontSize:14,fontWeight:600}}>Not connected</div>
             </div>
             <button style={{background:'var(--green)',color:'#fff',border:'none',borderRadius:8,padding:'8px 14px',fontSize:13,fontWeight:600,cursor:'pointer'}}>Connect</button>
@@ -1069,7 +1076,7 @@ function AdminPanel({currentUser,onBack}){
   // Stats
   const totalUsers=users.length;
   const totalScore=users.reduce((s,u)=>s+(u.score||0),0);
-  const totalUSDT=(totalScore/CONFIG.POINTS_PER_USDT).toFixed(2);
+  const totalPKR=Math.floor(totalScore/CONFIG.POINTS_PER_PKR);
   const pendingWDs=withdrawals.filter(w=>w.status==='pending');
   const totalPaid=withdrawals.filter(w=>w.status==='paid').reduce((s,w)=>s+parseFloat(w.amount||0),0).toFixed(2);
 
@@ -1163,7 +1170,7 @@ function AdminPanel({currentUser,onBack}){
         </div>
         <div className="admin-stat">
           <div className="admin-stat-lbl">💸 Total Paid</div>
-          <div className="admin-stat-val" style={{color:'var(--green)'}}>${totalPaid}</div>
+          <div className="admin-stat-val" style={{color:'var(--green)'}}>{`Rs. ${totalPaid}`}</div>
         </div>
       </div>
 
@@ -1262,10 +1269,75 @@ function AdminPanel({currentUser,onBack}){
       {/* Quick info */}
       <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:18,fontSize:13,color:'var(--text2)',lineHeight:2}}>
         <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15,color:'var(--text)',marginBottom:8}}>📋 Quick Guide</div>
-        <div>✅ <strong style={{color:'var(--text)'}}>Paid</strong> — User sent money, mark after you send USDT to their wallet</div>
+        <div>✅ <strong style={{color:'var(--text)'}}>Paid</strong> — User sent money, mark after you send payment to their wallet</div>
         <div>❌ <strong style={{color:'var(--text)'}}>Fail</strong> — Wrong address or rejected, user will see failed status</div>
         <div>🔓 <strong style={{color:'var(--text)'}}>Unlock</strong> — Manually unlock withdrawal for a user without 10 referrals</div>
         <div>🚫 <strong style={{color:'var(--text)'}}>Ban</strong> — Disable a suspicious or fraudulent account</div>
+      </div>
+    </div>
+  );
+}
+
+// ── CPALEAD OFFERWALL PAGE ─────────────────────────────────────────────────
+function OfferwallPage({user,showToast}){
+  const wallUrl = `${CONFIG.CPALEAD_WALL_URL}?sub=${user.uid}`;
+  return(
+    <div>
+      <div className="page-header">
+        <h1 className="page-title">🎯 Real <span>Offers</span></h1>
+        <p className="page-sub">Complete offers below to earn real Rupees — powered by CPALead</p>
+      </div>
+      <div className="page-body">
+        {/* Info banner */}
+        <div style={{background:'var(--card)',border:'1px solid var(--gold)',borderRadius:14,padding:16,marginBottom:18,display:'flex',alignItems:'flex-start',gap:14}}>
+          <div style={{fontSize:28,flexShrink:0}}>💡</div>
+          <div>
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14,marginBottom:4}}>How to earn from offers</div>
+            <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.7}}>
+              1. Choose any offer below<br/>
+              2. Complete the required task (watch, install, survey)<br/>
+              3. Points are automatically added to your account<br/>
+              4. Withdraw when you reach Rs.{CONFIG.MIN_WITHDRAWAL}
+            </div>
+          </div>
+        </div>
+
+        {/* Offer types */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:18}}>
+          {[
+            {icon:'📺',label:'Watch Videos',pts:'5–20 pts'},
+            {icon:'📲',label:'Install Apps',pts:'50–200 pts'},
+            {icon:'📋',label:'Surveys',pts:'100–500 pts'},
+          ].map((t,i)=>(
+            <div key={i} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:12,padding:'12px 10px',textAlign:'center'}}>
+              <div style={{fontSize:24,marginBottom:6}}>{t.icon}</div>
+              <div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{t.label}</div>
+              <div style={{fontSize:11,color:'var(--gold)',fontWeight:700}}>{t.pts}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* CPALead Offerwall iframe */}
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden',marginBottom:18}}>
+          <div style={{padding:'12px 16px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14}}>Available Offers</div>
+            <span className="chip chip-green">🟢 Live</span>
+          </div>
+          <iframe
+            src={wallUrl}
+            style={{width:'100%',height:'600px',border:'none',display:'block'}}
+            title="CPALead Offerwall"
+            allow="camera; microphone"
+          />
+        </div>
+
+        <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:14,padding:16,fontSize:13,color:'var(--text2)',lineHeight:1.8}}>
+          <div style={{fontFamily:'Syne',fontWeight:700,fontSize:14,color:'var(--text)',marginBottom:8}}>⚠️ Important Notes</div>
+          <div>• Complete offers fully — partial completions do not earn points</div>
+          <div>• Points may take up to <strong style={{color:'var(--text)'}}>10–30 minutes</strong> to appear after completion</div>
+          <div>• Do not use VPN while completing offers</div>
+          <div>• Each offer can only be completed once per account</div>
+        </div>
       </div>
     </div>
   );
@@ -1275,6 +1347,7 @@ function AdminPanel({currentUser,onBack}){
 const NAV=[
   {id:'dashboard',  label:'Home',     icon:'🏠'},
   {id:'earn',       label:'Earn',     icon:'▶️'},
+  {id:'offers',     label:'Offers',   icon:'🎯'},
   {id:'leaderboard',label:'Ranks',    icon:'🏆'},
   {id:'withdraw',   label:'Withdraw', icon:'💸'},
   {id:'profile',    label:'Profile',  icon:'👤'},
@@ -1381,7 +1454,10 @@ function App(){
 
   const isAdmin=user.email===CONFIG.ADMIN_EMAIL;
   const unwatched=visibleAds.filter(a=>!a.watched).length;
-  const navLabel=n=>n.id==='earn'?'Watch & Earn':n.id==='leaderboard'?'Leaderboard':n.label;
+  const navLabel=n=>
+    n.id==='earn'?'Watch & Earn':
+    n.id==='offers'?'Real Offers':
+    n.id==='leaderboard'?'Leaderboard':n.label;
 
   return(
     <div className="app-layout">
@@ -1429,7 +1505,7 @@ function App(){
             )}
             <div className="topbar-balance">
               <span style={{color:'var(--green)'}}>💵</span>
-              <span style={{color:'var(--green)',fontWeight:700}}>${(score/CONFIG.POINTS_PER_USDT).toFixed(3)}</span>
+              <span style={{color:'var(--green)',fontWeight:700}}>{`Rs. ${Math.floor(score/CONFIG.POINTS_PER_PKR)}`}</span>
             </div>
             <div className="topbar-notif">🔔<span className="notif-dot"/></div>
           </div>
@@ -1438,6 +1514,7 @@ function App(){
         <div className="page-scroll">
           {page==='dashboard'  &&<Dashboard    user={user} todayWatched={todayWatched} score={score} onWatchAd={setWatching} visibleAds={visibleAds}/>}
           {page==='earn'       &&<EarnPage      visibleAds={visibleAds} onWatchAd={setWatching}/>}
+          {page==='offers'     &&<OfferwallPage user={user} showToast={showToast}/>}
           {page==='leaderboard'&&<LeaderboardPage score={score}/>}
           {page==='withdraw'   &&<WithdrawPage  user={user} score={score} showToast={showToast} onWithdrawal={handleWithdrawal}/>}
           {page==='profile'    &&<ProfilePage   user={user} score={score} onSignOut={handleSignOut}/>}
